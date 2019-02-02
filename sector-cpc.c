@@ -112,6 +112,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 #include <strings.h>
@@ -800,14 +801,12 @@ int cpm_find_empty_diren_index(FILE *fp)
             memset(&dir, 0, sizeof(dir));
             memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
 
-            counter += 1;
-
             if (   dir.user_number != CPM_NO_FILE
                 && dir.AL[0]       != 0) {
                 continue;
             }
 
-            return counter;
+            return counter++;
         }
     }
 
