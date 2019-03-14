@@ -91,7 +91,7 @@
       records. Prefixed with `cpm_`.
 
     - AMSDOS: Amstrad CPC specific file system information similar to CPM. This
-      is not required when disks are accessed through CP/M. Prefied with
+      is not required when disks are accessed through CP/M. Prefixed with
       `amsdos_`.
 
                                Improvement Notes
