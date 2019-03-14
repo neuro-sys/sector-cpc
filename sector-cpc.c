@@ -561,8 +561,6 @@ void cpm_dir(FILE *fp)
             memset(&dir, 0, sizeof(dir));
             memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
 
-            normalize_filename(full_file_name, &dir);
-
             system_file = dir.ext[1] & 0x80;
 
             if (   dir.user_number == CPM_NO_FILE
@@ -572,6 +570,8 @@ void cpm_dir(FILE *fp)
                 continue;
             }
 
+            normalize_filename(full_file_name, &dir);
+
             sum_RC += dir.RC;
 
             while (find_dir_entry(fp, full_file_name, &extent_diren, extent_index++) != 0) {
@@ -580,7 +580,7 @@ void cpm_dir(FILE *fp)
 
             file_size = sum_RC * 128 / block_size + 1;
 
-            printf("%.8s.%.3s %3dK\n", dir.file_name, dir.ext, file_size);
+            printf("%.13s %3dK\n", full_file_name, file_size);
         }
     }
 }
