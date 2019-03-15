@@ -320,6 +320,10 @@ int main(int argc, char *argv[])
             cpm_insert(fp, opts.file.insert.file_name);
         }
 
+        if (opts.file.del.valid) {
+            cpm_del(fp, opts.file.del.file_name);
+        }
+
         fclose(fp);
     }
 

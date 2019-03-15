@@ -346,6 +346,50 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index)
     write_logical_sector(fp, base_track, diren_sector, buffer);
 }
 
+void cpm_del(FILE *fp, char *file_name)
+{
+    int base_track;
+    int i;
+
+    assert(fp);
+    assert(file_name);
+
+    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
+
+    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+        u8 buffer[SIZ_SECTOR];
+        int file_found;
+        int j;
+
+        file_found = 0;
+
+        read_logical_sector(fp, base_track, i, buffer);
+
+        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+            struct cpm_diren_s dir;
+            char full_file_name[13];
+
+            memset(&dir, 0, sizeof(dir));
+            memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
+
+            normalize_filename(full_file_name, &dir);
+
+            if (stricmp(full_file_name, file_name) != 0) {
+                continue;
+            }
+
+            file_found = 1;
+
+            dir.user_number = CPM_NO_FILE;
+            memcpy(buffer + j * sizeof(dir), &dir, sizeof(dir));
+        }
+
+        if (file_found) {
+            write_logical_sector(fp, base_track, i, buffer);
+        }
+    }
+}
+
 void cpm_insert(FILE *fp, char *file_name)
 {
     FILE *to_read;
