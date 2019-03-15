@@ -6,6 +6,7 @@ set(SOURCES
   sector-cpc.c
   cpm.c
   cpcemu.c
+  amsdos.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
