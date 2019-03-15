@@ -394,9 +394,11 @@ void cpm_insert(FILE *fp, char *file_name)
         while (1) {
             int free_alloc_index;
             u8 host_file_buffer[SIZ_TRACK];
+            int num_sector_per_block;
             int dest_sector_offset;
             int dest_track;
             int dest_sector;
+            int byte_remainder;
             int k;
 
             memset(host_file_buffer, CPM_NO_FILE, SIZ_TRACK);
@@ -406,8 +408,8 @@ void cpm_insert(FILE *fp, char *file_name)
                 break;
             }
 
+            num_sector_per_block = block_size / SIZ_SECTOR;
             free_alloc_index = get_free_alloc_index(base_alloc_index);
-
 
             if (free_alloc_index < 0) {
                 fprintf(stderr, "No space left in disk\n");
@@ -416,32 +418,23 @@ void cpm_insert(FILE *fp, char *file_name)
 
             dir.AL[dir_AL_index] = free_alloc_index;
 
-            /* Convert Allocation block into disk track and sector */
-            dest_sector_offset = free_alloc_index * block_size / SIZ_SECTOR;
-            dest_track = base_track + dest_sector_offset / NUM_SECTOR;
-            dest_sector = dest_sector_offset % NUM_SECTOR;
-
-            /* Hacky workaround at the expense of wasting one sector if sector is at 8 */
-            /* The reason is the following block is hard-coded to write 2 consecutive sectors */
-            /* And 8 is the last sector in a track. @TODO: Refactor this whole mess */
-            if (dest_sector >= NUM_SECTOR - 1) {
-                dir_AL_index++;
-                continue;
-            }
-
-            /* printf("Converting AL index: %d to sector_offset: %d, track: %d, sector: %d\n", free_alloc_index, */
-            /*        dest_sector_offset, dest_track, dest_sector); */
-
-            for (k = 0; k < block_size / SIZ_SECTOR; k++) {
+            for (k = 0; k < num_sector_per_block; k++) {
                 memset(host_file_buffer, CPM_NO_FILE, SIZ_TRACK);
+
+                /* Convert Allocation block into disk track and sector */
+                dest_sector_offset = (free_alloc_index * num_sector_per_block) + k;
+                dest_track = base_track + dest_sector_offset / NUM_SECTOR;
+                dest_sector = dest_sector_offset % NUM_SECTOR;
 
                 int byte_read = fread(host_file_buffer, 1, SIZ_SECTOR, to_read);
 
-                dir.RC += byte_read / 128 + 1; /* Is + 1 correct? */
+                dir.RC += byte_read / 128;
+                byte_remainder = byte_read % 128;
 
-                write_logical_sector(fp, dest_track, dest_sector + k, host_file_buffer);
+                write_logical_sector(fp, dest_track, dest_sector, host_file_buffer);
 
                 if (feof(to_read)) {
+                    dir.RC += byte_remainder > 0 ? 1 : 0;
                     cpm_write_diren(fp, &dir, new_diren_index);
                     printf("Wrote file into disk.\n");
                     fclose(to_read);
@@ -455,7 +448,6 @@ void cpm_insert(FILE *fp, char *file_name)
         cpm_write_diren(fp, &dir, new_diren_index);
     }
 }
-
 
 void cpm_dir(FILE *fp)
 {
