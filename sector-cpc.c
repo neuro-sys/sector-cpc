@@ -124,7 +124,8 @@ void print_usage_and_exit()
 {
     printf("Arguments:\n");
     printf("  --file filename.dsk <command>\n");
-    printf("  --new  filename.dsk <type>\n");
+    printf("  --new  filename.dsk <type>.\n");
+    printf("  --no-amsdos                         Do not add amsdos header.\n");
     printf("Options:\n");
     printf("  <command>:\n");
     printf("    dir                               Lists the contents of the disk.\n");
@@ -183,6 +184,10 @@ struct getopts_s {
             int valid;
         } extended;
     } new;
+
+    struct {
+        int valid;
+    } no_amsdos;
 };
 
 void getopts(struct getopts_s *opts, int argc, char *argv[])
@@ -214,6 +219,10 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
             opts->new.valid = 1;
             opts->new.file_name = argv[i + 1];
+        }
+
+        if (strcmp(argv[i], "--no-amsdos") == 0) {
+            opts->no_amsdos.valid = 1;
         }
 
         if (opts->file.valid) {
@@ -322,7 +331,8 @@ int main(int argc, char *argv[])
         }
 
         if (opts.file.insert.valid) {
-            cpm_insert(fp, opts.file.insert.file_name, opts.file.insert.entry_addr);
+            cpm_insert(fp, opts.file.insert.file_name, opts.file.insert.entry_addr,
+                       !opts.no_amsdos.valid);
         }
 
         if (opts.file.del.valid) {

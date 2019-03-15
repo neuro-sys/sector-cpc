@@ -391,7 +391,7 @@ void cpm_del(FILE *fp, char *file_name)
     }
 }
 
-void cpm_insert(FILE *fp, char *file_name, u16 entry_addr)
+void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, int amsdos)
 {
     FILE *to_read;
     int new_diren_index;
@@ -497,7 +497,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr)
 
                     dir.RC += 1;
 
-                    if (!amsdos_header_written) {
+                    if (amsdos && !amsdos_header_written) {
                         amsdos_header_written += 1;
                         memcpy(sector_buffer, &amsdos_header, 128);
                         continue;
