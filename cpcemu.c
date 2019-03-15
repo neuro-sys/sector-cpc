@@ -1,4 +1,4 @@
-#include "cpmemu.h"
+#include "cpcemu.h"
 
 #include <assert.h>
 #include <string.h>
@@ -108,6 +108,10 @@ void read_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR])
     int logical_sector;
     int offset_sector;
 
+    assert(track < NUM_TRACK);
+    assert(sector < NUM_SECTOR);
+    /* printf("DEBUG - read_logical_sector (track: %d, sector: %d)\n", track, sector); */
+
     offset_track   = CPCEMU_INFO_OFFSET + (track * SIZ_TRACK);
     logical_sector = get_logical_sector(fp, sector);
     offset_sector  = CPCEMU_TRACK_OFFSET + logical_sector * SIZ_SECTOR;
@@ -121,6 +125,10 @@ void write_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR])
     int offset_track;
     int logical_sector;
     int offset_sector;
+
+    assert(track < NUM_TRACK);
+    assert(sector < NUM_SECTOR);
+    /* printf("DEBUG - write_logical_sector (track: %d, sector: %d)\n", track, sector); */
 
     offset_track   = CPCEMU_INFO_OFFSET + (track * SIZ_TRACK);
     logical_sector = get_logical_sector(fp, sector);

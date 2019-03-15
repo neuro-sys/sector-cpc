@@ -117,7 +117,7 @@
 #include "platformdef.h"
 #include "types.h"
 #include "cpm.h"
-#include "cpmemu.h"
+#include "cpcemu.h"
 
 
 void print_usage_and_exit()

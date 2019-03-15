@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #include "platformdef.h"
-#include "cpmemu.h"
+#include "cpcemu.h"
 
 u8 allocation_table[(NUM_TRACK * NUM_SECTOR * SIZ_SECTOR) / 1024]; /* ?? Make it dynamic */
 
@@ -194,7 +194,9 @@ void init_alloc_table(FILE *fp)
             }
 
             for (k = 0; k < 16; k++) {
-                allocation_table[dir.AL[k]] = 1;
+                if (dir.AL[k]) {
+                    allocation_table[dir.AL[k]] = 1;
+                }
             }
         }
     }
@@ -392,7 +394,7 @@ void cpm_insert(FILE *fp, char *file_name)
         while (1) {
             int free_alloc_index;
             u8 host_file_buffer[SIZ_TRACK];
-            int dest_total_sector;
+            int dest_sector_offset;
             int dest_track;
             int dest_sector;
             int k;
@@ -406,6 +408,7 @@ void cpm_insert(FILE *fp, char *file_name)
 
             free_alloc_index = get_free_alloc_index(base_alloc_index);
 
+
             if (free_alloc_index < 0) {
                 fprintf(stderr, "No space left in disk\n");
                 exit(1);
@@ -413,14 +416,28 @@ void cpm_insert(FILE *fp, char *file_name)
 
             dir.AL[dir_AL_index] = free_alloc_index;
 
-            dest_total_sector = free_alloc_index * block_size / SIZ_SECTOR;
-            dest_track = base_track + dest_total_sector / NUM_SECTOR;
-            dest_sector = dest_total_sector % NUM_SECTOR;
+            /* Convert Allocation block into disk track and sector */
+            dest_sector_offset = free_alloc_index * block_size / SIZ_SECTOR;
+            dest_track = base_track + dest_sector_offset / NUM_SECTOR;
+            dest_sector = dest_sector_offset % NUM_SECTOR;
+
+            /* Hacky workaround at the expense of wasting one sector if sector is at 8 */
+            /* The reason is the following block is hard-coded to write 2 consecutive sectors */
+            /* And 8 is the last sector in a track. @TODO: Refactor this whole mess */
+            if (dest_sector >= NUM_SECTOR - 1) {
+                dir_AL_index++;
+                continue;
+            }
+
+            /* printf("Converting AL index: %d to sector_offset: %d, track: %d, sector: %d\n", free_alloc_index, */
+            /*        dest_sector_offset, dest_track, dest_sector); */
 
             for (k = 0; k < block_size / SIZ_SECTOR; k++) {
+                memset(host_file_buffer, CPM_NO_FILE, SIZ_TRACK);
+
                 int byte_read = fread(host_file_buffer, 1, SIZ_SECTOR, to_read);
 
-                dir.RC += byte_read / 128;
+                dir.RC += byte_read / 128 + 1; /* Is + 1 correct? */
 
                 write_logical_sector(fp, dest_track, dest_sector + k, host_file_buffer);
 

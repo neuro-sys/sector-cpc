@@ -1,5 +1,5 @@
-#ifndef __CPM_EMU_H
-#define __CPM_EMU_H
+#ifndef __CPCEMU_H
+#define __CPCEMU_H
 
 #include <stdio.h>
 #include "types.h"

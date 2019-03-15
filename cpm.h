@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "types.h"
-#include "cpmemu.h"
+#include "cpcemu.h"
 
 struct cpm_diren_s {
     u8 user_number;

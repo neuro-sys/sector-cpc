@@ -5,7 +5,7 @@ project(sector-cpc)
 set(SOURCES
   sector-cpc.c
   cpm.c
-  cpmemu.c
+  cpcemu.c
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
