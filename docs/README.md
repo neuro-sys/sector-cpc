@@ -26,3 +26,20 @@ Notes:
     E.g. 0x8000, or &8000 and 8000h is valid.
 
 ```
+
+## Build
+
+You can install CMake with a any C89/90 compliant C compiler.
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+Or you can simply do:
+
+```
+cc *.c -osector-cpc
+```

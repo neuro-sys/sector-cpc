@@ -19,3 +19,11 @@ Notes:
   &lt;entry_addr&gt; and &lt;exec_addr&gt; are in base 16, non-numeric characters will be ignored.
     E.g. 0x8000, or &amp;8000 and 8000h is valid.
 </code></pre>
+<h2 id="build">Build</h2>
+<p>You can install CMake with a any C89/90 compliant C compiler.</p>
+<pre><code>mkdir build
+cd build
+cmake ..
+make</code></pre>
+<p>Or you can simply do:</p>
+<pre><code>cc *.c -osector-cpc</code></pre>
