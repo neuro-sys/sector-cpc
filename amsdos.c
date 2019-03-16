@@ -16,7 +16,7 @@ int header_checksum(struct amsdos_header_s *header)
 
     for (i = 0; i < 67; i++) {
         u8 *data = (u8 *) header;
-        sum += data[i];
+        sum += (int) data[i];
     }
 
     return sum;
@@ -43,11 +43,13 @@ void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 ent
 
     file_type = strnicmp(filename_diren.ext, "bas", 3) == 0 ? 0 : 2;
 
+    data_location = 0;
+
     if (file_type == 0) {
         data_location = 0x170; /* BASIC start address */
     }
 
-    if (entry_addr) {
+    if (entry_addr > 0) {
         data_location = entry_addr;
     }
 

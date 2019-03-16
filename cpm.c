@@ -17,7 +17,7 @@ struct DPB_s DPB_CPC_data   = { 0x24, 3, 7, 0, 0x0B3, 0x3F, 0x0C0, 0, 0x10, 0, 2
 struct DPB_s *DPB;
 
 static
-void hex_dump(u8 *buf, int offset, size_t len)
+void hex_dump(u8 *buf, unsigned int offset, size_t len)
 {
 #define STRIDE 16
     int i;
@@ -25,7 +25,7 @@ void hex_dump(u8 *buf, int offset, size_t len)
     printf("%.4x: ", offset);
 
     for (i = 0; i < len; i++) {
-        printf("%.2x ", buf[i]);
+        printf("%.2x ", (unsigned int) buf[i]);
 
         if ((i + 1) % STRIDE == 0) {
             int j;
@@ -53,7 +53,6 @@ void normalize_filename(char *full_file_name, struct cpm_diren_s *dir)
 {
     char file_name[9];
     char ext[4];
-    int long_file;
     int k, j;
 
     file_name[8] = 0;
@@ -99,6 +98,11 @@ void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest)
     strcpy(buffer, full_file_name);
 
     token = strtok(buffer, ".");
+    if (!token) {
+        fprintf(stderr, "File name has no extension.\n");
+        exit(1);
+    }
+
     file_name_length = strlen(token);
     if (file_name_length > 8) {
         fprintf(stderr, "File name cannot be longer then 8 characters.\n");
@@ -215,8 +219,8 @@ void init_disk_info(struct cpcemu_disc_info_s *dest,
     assert(creator);
 
     memset(dest, 0, sizeof(struct cpcemu_disc_info_s));
-    sprintf(dest->header, "%s", header);
-    sprintf(dest->creator, "%s", creator);
+    snprintf(dest->header, sizeof(dest->header), "%s", header);
+    snprintf(dest->creator, sizeof(dest->creator), "%s", creator);
     dest->num_tracks = num_tracks;
     dest->num_heads = num_heads;
     dest->track_size = track_size;
@@ -246,14 +250,13 @@ void init_track_info(struct cpcemu_track_info_s *dest,
                      u8 track_num,
                      u8 head_num)
 {
-    struct cpcemu_sector_info_s sector_info_table[29];
     int i;
 
     assert(dest);
     assert(header);
 
     memset(dest, 0, sizeof(struct cpcemu_track_info_s));
-    sprintf(dest->header, "%s", header);
+    snprintf(dest->header, sizeof(dest->header), "%s", header);
     dest->track_num = track_num;
     dest->head_num = head_num;
     dest->sector_size = 2; /* ?? Make it dynamic */
@@ -268,8 +271,8 @@ void init_track_info(struct cpcemu_track_info_s *dest,
         sector->head = head_num;
         sector->sector_id = CPM_DATA_DISK + sector_skew_table[i];
         sector->sector_size = 2; /* ?? Make it dynamic */
-        sector->FDC_status_reg1; /* ?? */
-        sector->FDC_status_reg2; /* ?? */
+        /* sector->FDC_status_reg1; /\* ?? *\/ */
+        /* sector->FDC_status_reg2; /\* ?? *\/ */
         sector->_notused[1] = 2; /* ?? */
     }
 }
@@ -466,10 +469,8 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         for (dir_index = 0; dir_index < DPB->drm + 1; dir_index++) {
             int k, j;
             int free_alloc_index;
-            int num_record_per_block;
             int num_record_per_sector;
             int num_sector_per_block;
-            int dest_record_offset;
             int dest_track;
             int dest_sector;
             u8 sector_buffer[SIZ_SECTOR];
@@ -483,7 +484,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
 
             num_record_per_sector = SIZ_SECTOR / 128;
             num_sector_per_block  = block_size / SIZ_SECTOR;
-            num_record_per_block  = block_size / 128;
 
             dir.AL[dir_index] = free_alloc_index;
 
@@ -697,9 +697,7 @@ void cpm_dump(FILE *fp, char *file_name, int to_file)
             struct cpm_diren_s dir, extent_diren;
             char full_file_name[13];
             int extent_index;
-            int file_found;
 
-            file_found   = 0;
             extent_index = 1;
 
             memset(&extent_diren, 0, sizeof(dir));
@@ -708,9 +706,7 @@ void cpm_dump(FILE *fp, char *file_name, int to_file)
 
             normalize_filename(full_file_name, &dir);
 
-            file_found = stricmp(full_file_name, file_name) == 0;
-
-            if (!file_found) {
+            if (stricmp(full_file_name, file_name) != 0) {
                 continue;
             }
 

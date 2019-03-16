@@ -85,7 +85,7 @@ int get_logical_sector(FILE *fp, u8 sector)
 {
     assert(fp);
 
-    return sector_skew_table[sector];
+    return sector_skew_table[(int) sector];
 }
 
 #if 0
