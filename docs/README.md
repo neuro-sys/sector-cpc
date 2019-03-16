@@ -23,12 +23,12 @@ Options:
     del <file_name>                   Delete the file from disk.
 
 Notes:
- - [0] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
-    E.g. 0x8000, or &8000 and 8000h is valid.
-
- - [1] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
+ - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
     extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage
     as it signifies end of file. Use this flag when extracing text files
+
+ - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
+    E.g. 0x8000, or &8000 and 8000h is valid.
 ```
 
 ## Build

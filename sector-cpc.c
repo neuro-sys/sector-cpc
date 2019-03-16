@@ -137,12 +137,12 @@ void print_usage_and_exit()
     printf("    del <file_name>                   Delete the file from disk.\n");
     printf("\n");
     printf("Notes:\n");
-    printf(" - [0] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
-           "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
-    printf("\n");
-    printf(" - [1] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"
+    printf(" - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"
            "    extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage\n"
            "    as it signifies end of file. Use this flag when extracing text files\n");
+    printf("\n");
+    printf(" - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
+           "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
     exit(0);
 }
 
