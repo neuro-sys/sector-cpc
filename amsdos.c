@@ -55,7 +55,6 @@ void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 ent
     memcpy(dest->filename, filename_diren.file_name, sizeof(dest->filename));
     memcpy(dest->extension, filename_diren.ext, sizeof(dest->extension));
     dest->filetype = file_type;
-    /* dest->data_length = file_length + 128; */
     dest->data_location = data_location;
     dest->first_block = 0;
     dest->logical_length = data_length;
