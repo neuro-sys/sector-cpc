@@ -131,7 +131,8 @@ void print_usage_and_exit()
     printf("    dir                               Lists the contents of the disk.\n");
     printf("    dump <file_name>                  Hexdump the contents of file to standard output.\n");
     printf("    extract <file_name>               Extract the contents of file into host disk.\n");
-    printf("    insert <file_name> [<entry_addr>] Insert the file in host system into disk.\n");
+    printf("    insert <file_name> [<entry_addr>, Insert the file in host system into disk.\n");
+    printf("                        <exec_addr>]\n");
     printf("    del <file_name>                   Delete the file from disk.\n");
     printf("  <type>:\n");
     printf("    standard                          Standard AMSDOS DSK.\n");
@@ -162,6 +163,7 @@ struct getopts_s {
         struct {
             char *file_name;
             u16 entry_addr;
+            u16 exec_addr;
 
             int valid;
         } insert;
@@ -255,8 +257,13 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
                 opts->file.insert.valid = 1;
                 opts->file.insert.file_name = argv[i + 1];
+
                 if (i + 2 < argc) {
                     opts->file.insert.entry_addr = strtol(argv[i + 2], NULL, 16);
+                }
+
+                if (i + 3 < argc) {
+                    opts->file.insert.exec_addr = strtol(argv[i + 3], NULL, 16);
                 }
             }
 
@@ -332,7 +339,7 @@ int main(int argc, char *argv[])
 
         if (opts.file.insert.valid) {
             cpm_insert(fp, opts.file.insert.file_name, opts.file.insert.entry_addr,
-                       !opts.no_amsdos.valid);
+                       opts.file.insert.exec_addr, !opts.no_amsdos.valid);
         }
 
         if (opts.file.del.valid) {

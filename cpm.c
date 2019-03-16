@@ -82,7 +82,6 @@ void normalize_filename(char *full_file_name, struct cpm_diren_s *dir)
 }
 
 /* ?? Improve */
-static
 void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest)
 {
     char buffer[1024];
@@ -391,7 +390,7 @@ void cpm_del(FILE *fp, char *file_name)
     }
 }
 
-void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, int amsdos)
+void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos)
 {
     FILE *to_read;
     int new_diren_index;
@@ -400,10 +399,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, int amsdos)
     int base_track;
     int base_alloc_index;
     struct amsdos_header_s amsdos_header;
-    struct cpm_diren_s filename_diren;
-    int file_type;
-    int data_location;
-    int data_length;
     int amsdos_header_written;
 
     to_read = fopen(file_name, "rb");
@@ -419,26 +414,9 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, int amsdos)
 
     amsdos_header_written = 0;
 
-    fseek(to_read, 0, SEEK_END);
-    data_length = ftell(to_read);
-    fseek(to_read, 0, SEEK_SET);
-
     init_alloc_table(fp);
 
-    denormalize_filename(file_name, &filename_diren);
-
-    file_type = stricmp(filename_diren.ext, "bas") == 0 ? 0 : 2;
-
-    if (file_type == 0) {
-        data_location = 0x170; /* BASIC start address */
-    }
-
-    if (entry_addr) {
-        data_location = entry_addr;
-    }
-
-    amsdos_new(&amsdos_header, filename_diren.file_name, filename_diren.ext,
-               file_type, data_location, data_length);
+    amsdos_new(to_read, &amsdos_header, file_name, entry_addr, exec_addr);
 
     while (1) {
         int dir_AL_index;
@@ -654,6 +632,7 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             int cur_track;
             int num_record_per_sector;
             int num_record_per_block;
+            int header_sector;
 
             cur_sector            = (sector + s) % NUM_SECTOR;
             cur_track             = track + (sector + s) / NUM_SECTOR;
@@ -661,6 +640,8 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             num_record_per_block  = block_size / 128;
 
             read_logical_sector(fp, cur_track, cur_sector, block_buffer);
+
+            header_sector = cur_track == track && cur_sector == sector;
 
             for (h = 0; h < num_record_per_sector; h++) {
                 if (to_file) {
