@@ -573,7 +573,7 @@ void cpm_dir(FILE *fp)
 
             file_size = sum_RC * 128 / block_size + 1;
 
-            printf("%.13s %3dK\n", full_file_name, file_size);
+            printf("%13s\t%3dK\n", full_file_name, file_size);
         }
     }
 }

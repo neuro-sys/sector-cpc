@@ -68,7 +68,16 @@ List files in the image:
 
 ```
 ./sector-cpc --file test.dsk dir
-TEST.TXT   1K
+   MOVCPM.COM	 10K
+      PIP.COM	  8K
+   SUBMIT.COM	  2K
+     XSUB.COM	  1K
+       ED.COM	  7K
+      ASM.COM	  9K
+      DDT.COM	  5K
+     LOAD.COM	  2K
+     STAT.COM	  6K
+     DUMP.COM	  1K
 ```
 
 Hex-dump the contents of file:
