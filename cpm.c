@@ -540,6 +540,7 @@ void cpm_dir(FILE *fp)
             struct cpm_diren_s dir, extent_diren;
             char full_file_name[13];
             int system_file;
+            int read_only;
             int extent_index;
             int sum_RC;
             int file_size;
@@ -555,9 +556,9 @@ void cpm_dir(FILE *fp)
             memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
 
             system_file = dir.ext[1] & 0x80;
+            read_only   = dir.ext[0] & 0x80;
 
             if (   dir.user_number == CPM_NO_FILE
-                || system_file
                 || dir.AL[0]       == 0
                 || dir.EX          != 0) {
                 continue;
@@ -573,7 +574,9 @@ void cpm_dir(FILE *fp)
 
             file_size = sum_RC * 128 / block_size + 1;
 
-            printf("%13s\t%3dK\n", full_file_name, file_size);
+            printf("%13s\t%3dK\t%.6s\t%.9s\n", full_file_name, file_size,
+                   system_file ? "system" : "",
+                   read_only ? "read-only" : "");
         }
     }
 }

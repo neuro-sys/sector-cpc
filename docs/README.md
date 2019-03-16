@@ -68,16 +68,19 @@ List files in the image:
 
 ```
 ./sector-cpc --file test.dsk dir
-   MOVCPM.COM	 10K
-      PIP.COM	  8K
-   SUBMIT.COM	  2K
-     XSUB.COM	  1K
-       ED.COM	  7K
-      ASM.COM	  9K
-      DDT.COM	  5K
-     LOAD.COM	  2K
-     STAT.COM	  6K
-     DUMP.COM	  1K
+   MAXAM0.BIN	  7K	system	read-only
+    MAXAM.BAS	  2K		read-only
+  MAXUSER.BAK	  1K		
+    MAXUSER. 	  2K		read-only
+   MAXAM1.BIN	 16K	system	read-only
+   MAXAM2.BIN	  7K	system	read-only
+   MAXAM3.BIN	 12K	system	read-only
+        DISC.	  1K		
+  MAXUSER.BAS	  1K		
+     LIB1.ASM	  1K		
+     TEST.BAK	  1K		
+     TEST.ASM	  1K		
+     LIB1.BAK	  1K		
 ```
 
 Hex-dump the contents of file:
