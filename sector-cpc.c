@@ -124,20 +124,20 @@ void print_usage_and_exit()
 {
     printf("Arguments:\n");
     printf("  --file filename.dsk <command>\n");
-    printf("  --new  filename.dsk <type>.\n");
+    printf("  --new  filename.dsk\n");
     printf("  --no-amsdos                         Do not add amsdos header.\n");
     printf("Options:\n");
     printf("  <command>:\n");
     printf("    dir                               Lists the contents of the disk.\n");
     printf("    dump <file_name>                  Hexdump the contents of file to standard output.\n");
     printf("    extract <file_name>               Extract the contents of file into host disk.\n");
-    printf("    insert <file_name> [<entry_addr>, Insert the file in host system into disk.\n");
-    printf("                        <exec_addr>]\n");
+    printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
+           "                                      Insert the file in host system into disk.\n");
     printf("    del <file_name>                   Delete the file from disk.\n");
-    printf("  <type>:\n");
-    printf("    standard                          Standard AMSDOS DSK.\n");
-    printf("    extended                          Extended DSK.\n");
-
+    printf("\n");
+    printf("Notes:\n");
+    printf("  <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
+           "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
     exit(0);
 }
 
@@ -177,14 +177,6 @@ struct getopts_s {
     struct {
         char *file_name;
         int valid;
-
-        struct {
-            int valid;
-        } standard;
-
-        struct {
-            int valid;
-        } extended;
     } new;
 
     struct {
@@ -216,6 +208,10 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
         if (strcmp(argv[i], "--new") == 0) {
             if (i + 1 == argc) {
+                print_usage_and_exit();
+            }
+
+            if (i + 2 < argc) {
                 print_usage_and_exit();
             }
 
@@ -276,16 +272,6 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
                 opts->file.del.file_name = argv[i + 1];
             }
         }
-
-        if (opts->new.valid) {
-            if (strcmp(argv[i], "standard") == 0) {
-                opts->new.standard.valid = 1;
-            }
-
-            if (strcmp(argv[i], "extended") == 0) {
-                opts->new.extended.valid = 1;
-            }
-        }
     }
 
     if (!opts->file.valid && !opts->new.valid) {
@@ -299,10 +285,6 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
         && !opts->file.insert.valid
         && !opts->file.del.valid) {
         print_usage_and_exit();
-    }
-
-    if (opts->new.valid && !opts->new.standard.valid && !opts->new.extended.valid) {
-        opts->new.standard.valid = 1;
     }
 }
 

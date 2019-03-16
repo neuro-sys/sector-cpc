@@ -390,6 +390,26 @@ void cpm_del(FILE *fp, char *file_name)
     }
 }
 
+static
+void convert_alblock(int alloc_index, u8 base_track, u8 sector_offset, int *track, int *sector)
+{
+    int dest_record_offset;
+    int num_record_per_block;
+    int num_record_per_sector;
+    int num_sector_per_block;
+    int block_size;
+
+    block_size            = 128 << DPB->bsh;
+    num_record_per_sector = SIZ_SECTOR / 128;
+    num_sector_per_block  = block_size / SIZ_SECTOR;
+    num_record_per_block  = block_size / 128;
+
+    /* Convert Allocation block into disk track and sector */
+    dest_record_offset = (alloc_index * num_record_per_block) + sector_offset * num_record_per_sector;
+    *track = base_track + dest_record_offset / num_record_per_sector / NUM_SECTOR;
+    *sector = (dest_record_offset / num_record_per_sector) % NUM_SECTOR;
+}
+
 void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos)
 {
     FILE *to_read;
@@ -484,11 +504,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                     byte_read = fread(sector_buffer + k * 128, 1, 128, to_read);
 
                     if (feof(to_read)) {
-                        /* Convert Allocation block into disk track and sector */
-                        dest_record_offset = (free_alloc_index * num_record_per_block) + j * num_record_per_sector;
-                        dest_track = base_track + dest_record_offset / num_record_per_sector / NUM_SECTOR;
-                        dest_sector = (dest_record_offset / num_record_per_sector) % NUM_SECTOR;
-
+                        convert_alblock(free_alloc_index, base_track, j, &dest_track, &dest_sector);
                         write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
                         cpm_write_diren(fp, &dir, new_diren_index);
 
@@ -498,11 +514,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                     }
                 }
 
-                /* Convert Allocation block into disk track and sector */
-                dest_record_offset = (free_alloc_index * num_record_per_block) + j * num_record_per_sector;
-                dest_track = base_track + dest_record_offset / num_record_per_sector / NUM_SECTOR;
-                dest_sector = (dest_record_offset / num_record_per_sector) % NUM_SECTOR;
-
+                convert_alblock(free_alloc_index, base_track, j, &dest_track, &dest_sector);
                 write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
             }
         }
