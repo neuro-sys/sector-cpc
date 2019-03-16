@@ -12,19 +12,23 @@ Arguments:
   --file filename.dsk <command>
   --new  filename.dsk
   --no-amsdos                         Do not add amsdos header.
+  --text                              Treat file as text, and SUB byte as EOF. [0]
 Options:
   <command>:
     dir                               Lists the contents of the disk.
-    dump <file_name>                  Hexdump the contents of file to standard output.
+    dump <file_name>                  Hexdump the contents of file to standard output. [1]
     extract <file_name>               Extract the contents of file into host disk.
     insert <file_name> [<entry_addr>, <exec_addr>]
                                       Insert the file in host system into disk.
     del <file_name>                   Delete the file from disk.
 
 Notes:
-  <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
+ - [0] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
     E.g. 0x8000, or &8000 and 8000h is valid.
 
+ - [1] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
+    extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage
+    as it signifies end of file. Use this flag when extracing text files
 ```
 
 ## Build
