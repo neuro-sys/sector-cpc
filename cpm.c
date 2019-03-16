@@ -41,7 +41,7 @@ void hex_dump(u8 *buf, unsigned int offset, size_t len)
             }
             putchar('\n');
             if (i + 1 != len) {
-                printf("%.4x: ", offset + i);
+                printf("%.4x: ", offset + i + 1);
             }
         }
     }
@@ -611,7 +611,6 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
     for (k = 0; k < 16; k++) {
         int h, s;
         int is_last_AL;
-        int file_num_record;
         int sector_offset;
         int sector;
         int track;
@@ -627,7 +626,6 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             is_last_AL = 1;
         }
 
-        file_num_record = dir->RC * 128;
         byte_offset     = dir->AL[k] * block_size;
         sector_offset   = byte_offset / SIZ_SECTOR;
         track           = base_track + sector_offset / NUM_SECTOR;
