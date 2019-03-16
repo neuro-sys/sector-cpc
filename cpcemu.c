@@ -67,7 +67,8 @@ int check_disk_type(FILE *fp, u8 sector_id)
 
     read_track_info(fp, 0, &track_info);
 
-    return track_info.sector_info_table[0].sector_id == sector_id;
+    return sector_id <= track_info.sector_info_table[0].sector_id
+        && (sector_id + NUM_SECTOR) >= track_info.sector_info_table[0].sector_id; /* ?? */
 }
 
 int check_extended(FILE *fp)
