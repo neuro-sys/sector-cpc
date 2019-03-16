@@ -1,0 +1,21 @@
+<h1 id="sector-cpc">SECTOR-CPC</h1>
+<p><img src="face.png" /></p>
+<p>SECTOR-CPC is a command line utility to create and edit DSK images for Amstrad CPC 464/644/6128 family of computers.</p>
+<h2 id="usage">Usage</h2>
+<pre><code>Arguments:
+  --file filename.dsk &lt;command&gt;
+  --new  filename.dsk
+  --no-amsdos                         Do not add amsdos header.
+Options:
+  &lt;command&gt;:
+    dir                               Lists the contents of the disk.
+    dump &lt;file_name&gt;                  Hexdump the contents of file to standard output.
+    extract &lt;file_name&gt;               Extract the contents of file into host disk.
+    insert &lt;file_name&gt; [&lt;entry_addr&gt;, &lt;exec_addr&gt;]
+                                      Insert the file in host system into disk.
+    del &lt;file_name&gt;                   Delete the file from disk.
+
+Notes:
+  &lt;entry_addr&gt; and &lt;exec_addr&gt; are in base 16, non-numeric characters will be ignored.
+    E.g. 0x8000, or &amp;8000 and 8000h is valid.
+</code></pre>
