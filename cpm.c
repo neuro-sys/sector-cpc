@@ -644,7 +644,8 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             int cur_track;
             int num_record_per_sector;
             int num_record_per_block;
-            int header_sector;
+            int skip_amsdos;
+            int has_amsdos_header;
 
             cur_sector            = (sector + s) % NUM_SECTOR;
             cur_track             = track + (sector + s) / NUM_SECTOR;
@@ -654,11 +655,13 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             read_logical_sector(fp, cur_track, cur_sector, block_buffer);
 
             /* If the first extent, and the first track and sector, then it's header area */
-            header_sector = dir->EX == 0 && cur_track == track && cur_sector == sector;
+            has_amsdos_header = amsdos_header_exists((struct amsdos_header_s *) block_buffer);
+            skip_amsdos = dir->EX == 0 && cur_track == track && cur_sector == sector
+                && has_amsdos_header;
 
             for (h = 0; h < num_record_per_sector; h++) {
                 if (to_file) {
-                    if (header_sector && h == 0) {
+                    if (skip_amsdos && h == 0) {
                         continue;
                     }
                     cpm_dump_append_to_file(dir, write_file, block_buffer + h * 128, 128);
