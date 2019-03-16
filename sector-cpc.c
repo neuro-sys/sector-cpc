@@ -126,18 +126,23 @@ void print_usage_and_exit()
     printf("  --file filename.dsk <command>\n");
     printf("  --new  filename.dsk\n");
     printf("  --no-amsdos                         Do not add amsdos header.\n");
+    printf("  --text                              Treat file as text, and SUB byte as EOF. [0]\n");
     printf("Options:\n");
     printf("  <command>:\n");
     printf("    dir                               Lists the contents of the disk.\n");
-    printf("    dump <file_name>                  Hexdump the contents of file to standard output.\n");
+    printf("    dump <file_name>                  Hexdump the contents of file to standard output. [1]\n");
     printf("    extract <file_name>               Extract the contents of file into host disk.\n");
     printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
            "                                      Insert the file in host system into disk.\n");
     printf("    del <file_name>                   Delete the file from disk.\n");
     printf("\n");
     printf("Notes:\n");
-    printf("  <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
+    printf(" - [0] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
            "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
+    printf("\n");
+    printf(" - [1] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"
+           "    extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage\n"
+           "    as it signifies end of file. Use this flag when extracing text files\n");
     exit(0);
 }
 
@@ -182,6 +187,10 @@ struct getopts_s {
     struct {
         int valid;
     } no_amsdos;
+
+    struct {
+        int valid;
+    } text;
 };
 
 void getopts(struct getopts_s *opts, int argc, char *argv[])
@@ -221,6 +230,10 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
         if (strcmp(argv[i], "--no-amsdos") == 0) {
             opts->no_amsdos.valid = 1;
+        }
+
+        if (strcmp(argv[i], "--text") == 0) {
+            opts->text.valid = 1;
         }
 
         if (opts->file.valid) {
@@ -312,11 +325,11 @@ int main(int argc, char *argv[])
         }
 
         if (opts.file.dump.valid) {
-            cpm_dump(fp, opts.file.dump.file_name, 0);
+            cpm_dump(fp, opts.file.dump.file_name, 0, 0);
         }
 
         if (opts.file.extract.valid) {
-            cpm_dump(fp, opts.file.extract.file_name, 1);
+            cpm_dump(fp, opts.file.extract.file_name, 1, opts.text.valid);
         }
 
         if (opts.file.insert.valid) {

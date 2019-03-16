@@ -578,7 +578,7 @@ void cpm_dir(FILE *fp)
     }
 }
 
-void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len)
+void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len, int text)
 {
     char full_file_name[13];
 
@@ -596,10 +596,34 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
         }
     }
 
+    /* Find index of EOF marker if text file */
+#define SUB 0x1a
+    if (text) {
+        int i;
+        u8 *bufptr;
+        int sub_found;
+
+        sub_found = 0;
+
+        for (i = 0; i < len; i++) {
+            if (buf[i] == SUB) {
+                sub_found = 1;
+                break;
+            }
+        }
+
+        if (sub_found) {
+            fwrite(buf, 1, i, *fp);
+            return;
+        }
+#undef SUB
+    }
+
     fwrite(buf, 1, len, *fp);
 }
 
-void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_file, FILE **write_file)
+void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_file, FILE **write_file,
+                    int text)
 {
     int block_size;
     int num_sector_per_block;
@@ -662,7 +686,7 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
                     if (skip_amsdos && h == 0) {
                         continue;
                     }
-                    cpm_dump_append_to_file(dir, write_file, block_buffer + h * 128, 128);
+                    cpm_dump_append_to_file(dir, write_file, block_buffer + h * 128, 128, text);
                 } else {
                     hex_dump(block_buffer + h * 128, byte_offset + s * SIZ_SECTOR + h * 128, 128);
                 }
@@ -677,7 +701,7 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
     }
 }
 
-void cpm_dump(FILE *fp, char *file_name, int to_file)
+void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
 {
     FILE *write_file;
     int base_track;
@@ -711,10 +735,10 @@ void cpm_dump(FILE *fp, char *file_name, int to_file)
                 continue;
             }
 
-            cpm_dump_entry(fp, &dir, base_track, to_file, &write_file);
+            cpm_dump_entry(fp, &dir, base_track, to_file, &write_file, text);
 
             while (find_dir_entry(fp, full_file_name, &extent_diren, extent_index++) != 0) {
-                cpm_dump_entry(fp, &dir, base_track, to_file, &write_file);
+                cpm_dump_entry(fp, &dir, base_track, to_file, &write_file, text);
             }
 
             if (write_file) {
