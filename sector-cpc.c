@@ -119,6 +119,7 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
+#define VERSION "0.1.0"
 
 void print_usage_and_exit()
 {
@@ -143,6 +144,8 @@ void print_usage_and_exit()
     printf("\n");
     printf(" - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
            "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
+    printf("\n");
+    printf("sector-cpc " VERSION " 2019\n");
     exit(0);
 }
 
@@ -191,6 +194,10 @@ struct getopts_s {
     struct {
         int valid;
     } text;
+
+    struct {
+        int valid;
+    } version;
 };
 
 void getopts(struct getopts_s *opts, int argc, char *argv[])
@@ -200,10 +207,6 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
     assert(opts);
 
     memset(opts, 0, sizeof(struct getopts_s));
-
-    if (argc <= 2) {
-        print_usage_and_exit();
-    }
 
     for (i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--file") == 0) {
