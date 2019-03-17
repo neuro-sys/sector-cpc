@@ -320,12 +320,11 @@ int cpm_find_empty_diren_index(FILE *fp)
             memset(&dir, 0, sizeof(dir));
             memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
 
-            if (   dir.user_number != CPM_NO_FILE
-                && dir.AL[0]       != 0) {
-                continue;
+            if (dir.user_number == CPM_NO_FILE) {
+                return counter;
             }
 
-            return counter++;
+            counter += 1;
         }
     }
 
@@ -440,6 +439,8 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
     init_alloc_table(fp);
 
     amsdos_new(to_read, &amsdos_header, file_name, entry_addr, exec_addr);
+
+    cpm_del(fp, file_name);
 
     while (1) {
         int dir_AL_index;
