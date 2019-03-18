@@ -223,10 +223,6 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
                 print_usage_and_exit();
             }
 
-            if (i + 2 < argc) {
-                print_usage_and_exit();
-            }
-
             opts->new.valid = 1;
             opts->new.file_name = argv[i + 1];
         }
@@ -310,6 +306,20 @@ int main(int argc, char *argv[])
 
     getopts(&opts, argc, argv);
 
+    if (opts.new.valid) {
+        FILE *fp;
+
+        fp = fopen(opts.new.file_name, "wb+");
+        if (!fp) {
+            fprintf(stderr, "Failed to open file %s for writing.\n", opts.new.file_name);
+            exit(1);
+        }
+
+        cpm_new(fp, opts.new.file_name);
+
+        fclose(fp);
+    }
+
     if (opts.file.valid) {
         FILE *fp;
 
@@ -343,20 +353,6 @@ int main(int argc, char *argv[])
         if (opts.file.del.valid) {
             cpm_del(fp, opts.file.del.file_name);
         }
-
-        fclose(fp);
-    }
-
-    if (opts.new.valid) {
-        FILE *fp;
-
-        fp = fopen(opts.new.file_name, "wb+");
-        if (!fp) {
-            fprintf(stderr, "Failed to open file %s for writing.\n", opts.new.file_name);
-            exit(1);
-        }
-
-        cpm_new(fp, opts.new.file_name);
 
         fclose(fp);
     }
