@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "platformdef.h"
 #include "cpcemu.h"
@@ -573,7 +574,7 @@ void cpm_dir(FILE *fp)
                 sum_RC += extent_diren.RC;
             }
 
-            file_size = sum_RC * 128 / 1024;
+            file_size = ceil(sum_RC * 128.0 / 1024.0);
 
             printf("%13s\t%3dK\t%.6s\t%.9s\n", full_file_name, file_size,
                    system_file ? "system" : "",
