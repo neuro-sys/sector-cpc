@@ -4,36 +4,36 @@
 
 SECTOR-CPC is a command line utility to create and edit DSK images for Amstrad CPC 464/644/6128 family of computers.
 
-
 ## Usage
 
 ```
 Arguments:
   --file filename.dsk <command>
   --new  filename.dsk
-  --no-amsdos                         Do not add amsdos header.
-  --text                              Treat file as text, and SUB byte as EOF. [0]
+  --no-amsdos                         Do not add AMSDOS header.
+  --text                              Treat file as text, using SUB byte as EOF marker. [0]
 Options:
   <command>:
-    dir                               Lists the contents of the disk.
-    dump <file_name>                  Hexdump the contents of file to standard output. [1]
-    extract <file_name>               Extract the contents of file into host disk.
+    dir                               Lists contents of disk image.
+    dump <file_name>                  Hexdump contents of file to standard output. [1]
+    extract <file_name>               Extract contents of file into host disk.
     insert <file_name> [<entry_addr>, <exec_addr>]
-                                      Insert the file in host system into disk.
-    del <file_name>                   Delete the file from disk.
+                                      Insert file on host system into disk.
+    del <file_name>                   Delete file from disk.
 
 Notes:
  - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
-    extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage
-    as it signifies end of file. Use this flag when extracing text files
+    extracting file records of every 128 bytes, an ASCII file past SUB character is garbage
+    as it signifies end of file. Use this flag when extracing text files.
 
  - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
-    E.g. 0x8000, or &8000 and 8000h is valid.
+    Also give space between the two.
+    E.g. 0x8000, or &8000 and 8000h are valid.
 ```
 
 ## Build
 
-You can install CMake with a any C89/90 compliant C compiler.
+You can install CMake and any C89/90 compliant C compiler.
 
 ```
 mkdir build
@@ -50,13 +50,13 @@ cc *.c -osector-cpc
 
 ## Examples
 
-Create a new DSK image:
+Create a new disk image:
 
 ```
 ./sector-cpc --new test.dsk
 ```
 
-Insert a file into the image:
+Insert a file into disk image:
 
 ```
 ./sector-cpc --file test.dsk insert test.txt
@@ -68,7 +68,7 @@ For a binary file with `entry` and `execution` addresses:
 ./sector-cpc --file test.dsk insert code.bin 8000,8000
 ```
 
-List files in the image:
+List files in disk image:
 
 ```
 ./sector-cpc --file test.dsk dir
@@ -87,7 +87,7 @@ List files in the image:
      LIB1.BAK	  1K		
 ```
 
-Hex-dump the contents of file:
+Hexdump contents of file:
 
 ```
 ./sector-cpc --file test.dsk dump test.txt
@@ -109,14 +109,14 @@ Hex-dump the contents of file:
 0cf0: e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 e5 ................
 ```
 
-Extract a file from the disk image:
+Extract a file from disk image:
 
 ```
 ./sector-cpc --file test.dsk extract test.txt
-Extract file test.txt.
+Extracted file test.txt.
 ```
 
-Create a disk, insert an executable binary at 0x8000 with exec address 0x8000
+Create a disk, insert an executable binary at load address 0x8000 and execute address 0x8000
 
 ```
 ./sector-cpc --new test.dsk --file test.dsk insert copper.bin 8000 8000

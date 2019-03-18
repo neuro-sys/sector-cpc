@@ -126,24 +126,25 @@ void print_usage_and_exit()
     printf("Arguments:\n");
     printf("  --file filename.dsk <command>\n");
     printf("  --new  filename.dsk\n");
-    printf("  --no-amsdos                         Do not add amsdos header.\n");
-    printf("  --text                              Treat file as text, and SUB byte as EOF. [0]\n");
+    printf("  --no-amsdos                         Do not add AMSDOS header.\n");
+    printf("  --text                              Treat file as text, and SUB byte as EOF marker. [0]\n");
     printf("Options:\n");
     printf("  <command>:\n");
-    printf("    dir                               Lists the contents of the disk.\n");
-    printf("    dump <file_name>                  Hexdump the contents of file to standard output. [1]\n");
-    printf("    extract <file_name>               Extract the contents of file into host disk.\n");
+    printf("    dir                               Lists contents of disk image.\n");
+    printf("    dump <file_name>                  Hexdump contents of file to standard output. [1]\n");
+    printf("    extract <file_name>               Extract contents of file into host disk.\n");
     printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
-           "                                      Insert the file in host system into disk.\n");
-    printf("    del <file_name>                   Delete the file from disk.\n");
+           "                                      Insert file on host system into disk.\n");
+    printf("    del <file_name>                   Delete file from disk.\n");
     printf("\n");
     printf("Notes:\n");
     printf(" - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"
-           "    extracting file segments of every 128 bytes, an ASCII file past SUB byte is garbage\n"
-           "    as it signifies end of file. Use this flag when extracing text files\n");
+           "    extracting file records of every 128 bytes, an ASCII file past SUB byte is garbage\n"
+           "    as it signifies end of file. Use this flag when extracing text files.\n");
     printf("\n");
     printf(" - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.\n"
-           "    E.g. 0x8000, or &8000 and 8000h is valid.\n");
+           "    Also give space between the two."
+           "    E.g. 0x8000, or &8000 and 8000h are valid.\n");
     printf("\n");
     printf("sector-cpc " VERSION " 2019\n");
     exit(0);
