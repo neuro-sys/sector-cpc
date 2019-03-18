@@ -393,7 +393,7 @@ void cpm_del(FILE *fp, char *file_name)
 }
 
 static
-void convert_alblock(int alloc_index, u8 base_track, u8 sector_offset, int *track, int *sector)
+void convert_alblock(int alloc_index, u8 sector_offset, int *track, int *sector)
 {
     int dest_record_offset;
     int num_record_per_block;
@@ -408,7 +408,7 @@ void convert_alblock(int alloc_index, u8 base_track, u8 sector_offset, int *trac
 
     /* Convert Allocation block into disk track and sector */
     dest_record_offset = (alloc_index * num_record_per_block) + sector_offset * num_record_per_sector;
-    *track = base_track + dest_record_offset / num_record_per_sector / NUM_SECTOR;
+    *track = dest_record_offset / num_record_per_sector / NUM_SECTOR;
     *sector = (dest_record_offset / num_record_per_sector) % NUM_SECTOR;
 }
 
@@ -476,7 +476,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
             int dest_sector;
             u8 sector_buffer[SIZ_SECTOR];
 
-            free_alloc_index = get_free_alloc_index(base_alloc_index);
+            free_alloc_index = get_free_alloc_index(base_track + base_alloc_index);
 
             if (free_alloc_index < 0) {
                 fprintf(stderr, "No space left in disk\n");
@@ -505,7 +505,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                     byte_read = fread(sector_buffer + k * 128, 1, 128, to_read);
 
                     if (feof(to_read)) {
-                        convert_alblock(free_alloc_index, base_track, j, &dest_track, &dest_sector);
+                        convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
                         write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
                         cpm_write_diren(fp, &dir, new_diren_index);
 
@@ -515,7 +515,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                     }
                 }
 
-                convert_alblock(free_alloc_index, base_track, j, &dest_track, &dest_sector);
+                convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
                 write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
             }
         }
@@ -573,7 +573,7 @@ void cpm_dir(FILE *fp)
                 sum_RC += extent_diren.RC;
             }
 
-            file_size = sum_RC * 128 / block_size + 1;
+            file_size = sum_RC * 128 / 1024;
 
             printf("%13s\t%3dK\t%.6s\t%.9s\n", full_file_name, file_size,
                    system_file ? "system" : "",
@@ -695,7 +695,7 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
                     hex_dump(block_buffer + h * 128, byte_offset + s * SIZ_SECTOR + h * 128, 128);
                 }
 
-                if (is_last_AL && (record_counter + 1) >= (dir->RC % num_record_per_block)) { /* ?? */
+                if (is_last_AL && (record_counter + 1) >= dir->RC) { /* ?? */
                     return;
                 }
 
@@ -746,7 +746,7 @@ void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
             }
 
             if (write_file) {
-                printf("Extract file %s.\n", file_name);
+                printf("Extracted file %s.\n", file_name);
                 fclose(write_file);
             }
             return;
