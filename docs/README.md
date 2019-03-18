@@ -115,3 +115,9 @@ Extract a file from the disk image:
 ./sector-cpc --file test.dsk extract test.txt
 Extract file test.txt.
 ```
+
+Create a disk, insert an executable binary at 0x8000 with exec address 0x8000
+
+```
+./sector-cpc --new test.dsk --file test.dsk insert copper.bin 8000 8000
+```
