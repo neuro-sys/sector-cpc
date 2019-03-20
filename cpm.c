@@ -174,12 +174,10 @@ int find_dir_entry(FILE *fp, char *file_name, struct cpm_diren_s *dest, u8 exten
 static
 void init_alloc_table(FILE *fp)
 {
-    int alloc_index;
     int base_track;
     int i;
 
     base_track  = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
-    alloc_index = 0;
 
     for (i = 0; i < NUM_DIR_SECTORS; i++) {
         u8 buffer[SIZ_SECTOR];
@@ -399,12 +397,10 @@ void convert_alblock(int alloc_index, u8 sector_offset, int *track, int *sector)
     int dest_record_offset;
     int num_record_per_block;
     int num_record_per_sector;
-    int num_sector_per_block;
     int block_size;
 
     block_size            = 128 << DPB->bsh;
     num_record_per_sector = SIZ_SECTOR / 128;
-    num_sector_per_block  = block_size / SIZ_SECTOR;
     num_record_per_block  = block_size / 128;
 
     /* Convert Allocation block into disk track and sector */
@@ -444,7 +440,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
     cpm_del(fp, file_name);
 
     while (1) {
-        int dir_AL_index;
         struct cpm_diren_s dir;
         int dir_index;
 
@@ -464,8 +459,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         dir.S2 = 0;
         dir.RC = 0;
         memset(((u8 *) &dir) + 16, 0, sizeof(dir.AL));
-
-        dir_AL_index = 0;
 
         /* Filling Allocation Table, 16 entries, each 1024 bytes block */
         for (dir_index = 0; dir_index < DPB->drm + 1; dir_index++) {
@@ -493,7 +486,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                 memset(sector_buffer, CPM_NO_FILE, SIZ_SECTOR);
 
                 for (k = 0; k < num_record_per_sector; k++) {
-                    int byte_read;
 
                     dir.RC += 1;
 
@@ -502,8 +494,6 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                         memcpy(sector_buffer, &amsdos_header, 128);
                         continue;
                     }
-
-                    byte_read = fread(sector_buffer + k * 128, 1, 128, to_read);
 
                     if (feof(to_read)) {
                         convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
@@ -546,10 +536,8 @@ void cpm_dir(FILE *fp)
             int extent_index;
             int sum_RC;
             int file_size;
-            int block_size;
 
             sum_RC       = 0;
-            block_size   = 128 << DPB->bsh;
             extent_index = 1;                 /* Start searching from
                                                  the next extent */
 
@@ -605,7 +593,6 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
 #define SUB 0x1a
     if (text) {
         int i;
-        u8 *bufptr;
         int sub_found;
 
         sub_found = 0;
@@ -670,14 +657,12 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             int cur_sector;
             int cur_track;
             int num_record_per_sector;
-            int num_record_per_block;
             int skip_amsdos;
             int has_amsdos_header;
 
             cur_sector            = (sector + s) % NUM_SECTOR;
             cur_track             = track + (sector + s) / NUM_SECTOR;
             num_record_per_sector = SIZ_SECTOR / 128;
-            num_record_per_block  = block_size / 128;
 
             read_logical_sector(fp, cur_track, cur_sector, block_buffer);
 

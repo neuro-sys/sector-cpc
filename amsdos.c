@@ -41,7 +41,7 @@ void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 ent
 
     denormalize_filename(file_name, &filename_diren);
 
-    file_type = strnicmp(filename_diren.ext, "bas", 3) == 0 ? 0 : 2;
+    file_type = strnicmp((char *) filename_diren.ext, "bas", 3) == 0 ? 0 : 2;
 
     data_location = 0;
 
