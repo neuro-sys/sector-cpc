@@ -1,5 +1,5 @@
-#ifndef __CPM_H_
-#define __CPM_H_
+#ifndef CPM_H_
+#define CPM_H_
 
 #include <stdio.h>
 
@@ -47,7 +47,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
 void cpm_del(FILE *fp, char *file_name);
 void cpm_dir(FILE *fp);
 void cpm_dump(FILE *fp, char *file_name, int to_file, int text);
-void cpm_new(FILE *fp, char *file_name);
+void cpm_new(FILE *fp);
 void init_sector_skew_table(FILE *fp);
 void init_disk_params(FILE *fp);
 void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest);

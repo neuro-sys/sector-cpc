@@ -13,12 +13,12 @@
 
 u8 allocation_table[(NUM_TRACK * NUM_SECTOR * SIZ_SECTOR) / 1024]; /* ?? Make it dynamic */
 
-struct DPB_s DPB_CPC_system = { 0x24, 3, 7, 0, 0x0AA, 0x3F, 0x0C0, 0, 0x10, 2, 2, 3 };
-struct DPB_s DPB_CPC_data   = { 0x24, 3, 7, 0, 0x0B3, 0x3F, 0x0C0, 0, 0x10, 0, 2, 3 };
-struct DPB_s *DPB;
+static struct DPB_s DPB_CPC_system = { 0x24, 3, 7, 0, 0x0AA, 0x3F, 0x0C0, 0, 0x10, 2, 2, 3 };
+static struct DPB_s DPB_CPC_data   = { 0x24, 3, 7, 0, 0x0B3, 0x3F, 0x0C0, 0, 0x10, 0, 2, 3 };
+static struct DPB_s *DPB;
 
 static
-void hex_dump(u8 *buf, unsigned int offset, size_t len)
+void hex_dump(u8 *buf, int offset, int len)
 {
 #define STRIDE 16
     int i;
@@ -54,7 +54,7 @@ void normalize_filename(char *full_file_name, struct cpm_diren_s *dir)
 {
     char file_name[9];
     char ext[4];
-    int k, j;
+    unsigned int k, j;
 
     file_name[8] = 0;
     ext[3]       = 0;
@@ -231,7 +231,7 @@ void init_disk_info(struct cpcemu_disc_info_s *dest,
 static
 int get_free_alloc_index(int base_index)
 {
-    int i;
+    unsigned int i;
 
     for (i = base_index; i < sizeof(allocation_table); i++) {
         if (!allocation_table[i]) {
@@ -592,7 +592,7 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
     /* Find index of EOF marker if text file */
 #define SUB 0x1a
     if (text) {
-        int i;
+        unsigned int i;
         int sub_found;
 
         sub_found = 0;
@@ -745,7 +745,7 @@ void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
 }
 
 
-void cpm_new(FILE *fp, char *file_name)
+void cpm_new(FILE *fp)
 {
     struct cpcemu_disc_info_s disk_info;
     int track;

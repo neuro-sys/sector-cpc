@@ -1,5 +1,5 @@
-#ifndef __PLATFORMDEF_H_
-#define __PLATFORMDEF_H_
+#ifndef PLATFORMDEF_H_
+#define PLATFORMDEF_H_
 
 #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
 #include <strings.h>

@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
 
-        cpm_new(fp, opts.new.file_name);
+        cpm_new(fp);
 
         fclose(fp);
     }

@@ -1,5 +1,5 @@
-#ifndef __AMSDOS_H_
-#define __AMSDOS_H_
+#ifndef AMSDOS_H_
+#define AMSDOS_H_
 
 #include "types.h"
 

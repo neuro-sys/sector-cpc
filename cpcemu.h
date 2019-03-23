@@ -1,5 +1,5 @@
-#ifndef __CPCEMU_H
-#define __CPCEMU_H
+#ifndef CPCEMU_H
+#define CPCEMU_H
 
 #include <stdio.h>
 #include "types.h"
@@ -85,6 +85,7 @@ struct cpcemu_track_info_s {
 
 #pragma pack(pop)
 
+extern u8 sector_skew_table[NUM_SECTOR];
 u8 sector_skew_table[NUM_SECTOR];
 
 void read_disc_info(FILE *fp, struct cpcemu_disc_info_s *info);

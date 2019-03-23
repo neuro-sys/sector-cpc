@@ -7,16 +7,16 @@
 #include "platformdef.h"
 
 static
-int header_checksum(struct amsdos_header_s *header)
+u16 header_checksum(struct amsdos_header_s *header)
 {
     int i;
-    int sum;
+    u16 sum;
 
     sum = 0;
 
     for (i = 0; i < 67; i++) {
         u8 *data = (u8 *) header;
-        sum += (int) data[i];
+        sum += data[i];
     }
 
     return sum;
@@ -24,10 +24,10 @@ int header_checksum(struct amsdos_header_s *header)
 
 void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 entry_addr, u16 exec_addr)
 {
-    int data_length;
+    u16 data_length;
     struct cpm_diren_s filename_diren;
-    int file_type;
-    int data_location;
+    u8 file_type;
+    u16 data_location;
 
     assert(fp);
     assert(dest);
@@ -36,7 +36,7 @@ void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 ent
     memset(dest, 0, sizeof(*dest));
 
     fseek(fp, 0, SEEK_END);
-    data_length = ftell(fp);
+    data_length = (u16) ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
     denormalize_filename(file_name, &filename_diren);
