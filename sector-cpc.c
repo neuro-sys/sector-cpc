@@ -352,7 +352,9 @@ int main(int argc, char *argv[])
         }
 
         if (opts.file.del.valid) {
-            cpm_del(fp, opts.file.del.file_name);
+            if (cpm_del(fp, opts.file.del.file_name)) {
+                printf("%s is deleted.\n", opts.file.del.file_name);
+            }
         }
 
         fclose(fp);

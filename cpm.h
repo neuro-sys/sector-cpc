@@ -44,7 +44,7 @@ struct DPB_s {
 int cpm_find_empty_diren_index(FILE *fp);
 void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index);
 void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos);
-void cpm_del(FILE *fp, char *file_name);
+int cpm_del(FILE *fp, char *file_name);
 void cpm_dir(FILE *fp);
 void cpm_dump(FILE *fp, char *file_name, int to_file, int text);
 void cpm_new(FILE *fp);

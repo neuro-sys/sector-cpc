@@ -158,7 +158,8 @@ int find_dir_entry(FILE *fp, char *file_name, struct cpm_diren_s *dest, u8 exten
 
             normalize_filename(full_file_name, &dir);
 
-            file_found = stricmp(full_file_name, file_name) == 0;
+            file_found = dir.user_number != CPM_NO_FILE
+                && stricmp(full_file_name, file_name) == 0;
 
             if (file_found && dir.EX == extent) {
                 memcpy(dest, &dir, sizeof(struct cpm_diren_s));
@@ -347,15 +348,17 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index)
     write_logical_sector(fp, base_track, diren_sector, buffer);
 }
 
-void cpm_del(FILE *fp, char *file_name)
+int cpm_del(FILE *fp, char *file_name)
 {
     int base_track;
     int i;
+    int file_deleted;
 
     assert(fp);
     assert(file_name);
 
-    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
+    base_track   = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
+    file_deleted = 0;
 
     for (i = 0; i < NUM_DIR_SECTORS; i++) {
         u8 buffer[SIZ_SECTOR];
@@ -380,6 +383,7 @@ void cpm_del(FILE *fp, char *file_name)
             }
 
             file_found = 1;
+            file_deleted = 1;
 
             dir.user_number = CPM_NO_FILE;
             memcpy(buffer + j * sizeof(dir), &dir, sizeof(dir));
@@ -389,6 +393,8 @@ void cpm_del(FILE *fp, char *file_name)
             write_logical_sector(fp, base_track, i, buffer);
         }
     }
+
+    return file_deleted;
 }
 
 static
@@ -458,11 +464,11 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         dir.S1 = 0;
         dir.S2 = 0;
         dir.RC = 0;
-        memset(((u8 *) &dir) + 16, 0, sizeof(dir.AL));
+        memset(&dir.AL, 0, sizeof(dir.AL));
 
         /* Filling Allocation Table, 16 entries, each 1024 bytes block */
-        for (dir_index = 0; dir_index < DPB->drm + 1; dir_index++) {
-            int k, j;
+        for (dir_index = 0; dir_index < sizeof(dir.AL); dir_index++) {
+            int j, k;
             int free_alloc_index;
             int num_record_per_sector;
             int num_sector_per_block;
@@ -473,7 +479,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
             free_alloc_index = get_free_alloc_index(base_track + base_alloc_index);
 
             if (free_alloc_index < 0) {
-                fprintf(stderr, "No space left in disk\n");
+                fprintf(stderr, "No space left in disk.\n");
                 exit(1);
             }
 
@@ -486,21 +492,22 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                 memset(sector_buffer, CPM_NO_FILE, SIZ_SECTOR);
 
                 for (k = 0; k < num_record_per_sector; k++) {
-
                     dir.RC += 1;
 
                     if (amsdos && !amsdos_header_written) {
-                        amsdos_header_written += 1;
+                        amsdos_header_written = 1;
                         memcpy(sector_buffer, &amsdos_header, 128);
                         continue;
                     }
+
+                    fread(sector_buffer + k * 128, 1, 128, to_read);
 
                     if (feof(to_read)) {
                         convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
                         write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
                         cpm_write_diren(fp, &dir, new_diren_index);
 
-                        printf("Wrote file into disk.\n");
+                        printf("Wrote %s into disk.\n", file_name);
                         fclose(to_read);
                         return;
                     }
@@ -512,6 +519,8 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         }
 
         cpm_write_diren(fp, &dir, new_diren_index);
+
+        cur_extent += 1;
     }
 }
 
@@ -624,7 +633,7 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
     block_size           = 128 << DPB->bsh;
     num_sector_per_block = block_size / SIZ_SECTOR;
 
-    for (k = 0; k < 16; k++) {
+    for (k = 0; k < sizeof(dir->AL); k++) {
         int h, s;
         int is_last_AL;
         int sector_offset;
@@ -754,7 +763,7 @@ void cpm_new(FILE *fp)
 
     memcpy(sector_skew_table, skew_table, sizeof(skew_table));
 
-    init_disk_info(&disk_info, CPCEMU_HEADER_STD, CPCEMU_CREATOR, 40, 1, SIZ_TRACK);
+    init_disk_info(&disk_info, CPCEMU_HEADER_STD, CPCEMU_CREATOR, NUM_TRACK, 1, SIZ_TRACK);
     write_disc_info(fp, &disk_info);
 
     for (track = 0; track < NUM_TRACK; track++) {
