@@ -7,4 +7,9 @@
 #define strnicmp strncasecmp
 #endif
 
+#if defined (_MSC_VER)
+#define isspace iswspace
+#define isprint iswprint
+#endif
+
 #endif
