@@ -46,9 +46,9 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index);
 void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos);
 int cpm_del(FILE *fp, char *file_name);
 void cpm_dir(FILE *fp);
+void cpm_info(FILE *fp, char *file_name);
 void cpm_dump(FILE *fp, char *file_name, int to_file, int text);
 void cpm_new(FILE *fp);
-void init_sector_skew_table(FILE *fp);
 void init_disk_params(FILE *fp);
 void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest);
 

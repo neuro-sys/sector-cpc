@@ -18,10 +18,6 @@ extern char *CPCEMU_HEADER_EX;
 extern char *CPCEMU_CREATOR;
 extern char *CPCEMU_TRACK_HEADER;
 
-extern int NUM_DIR_SECTORS;
-extern int NUM_FILE_PER_SECTOR;
-
-
 /* Tightly packed disc data structures */
 #pragma pack(push)
 #pragma pack(1)

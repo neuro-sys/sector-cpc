@@ -10,11 +10,6 @@ char *CPCEMU_HEADER_EX    = "EXTENDED CPC DSK File\r\nDisk-Info\r\n";
 char *CPCEMU_CREATOR      = "AMS-DSK\r\n";
 char *CPCEMU_TRACK_HEADER = "Track-Info\r\n";
 
-int NUM_DIR_SECTORS;
-int NUM_FILE_PER_SECTOR;
-
-
-
 void read_disc_info(FILE *fp, struct cpcemu_disc_info_s *info)
 {
     assert(fp);

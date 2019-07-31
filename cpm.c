@@ -17,6 +17,19 @@ static struct DPB_s DPB_CPC_system = { 0x24, 3, 7, 0, 0x0AA, 0x3F, 0x0C0, 0, 0x1
 static struct DPB_s DPB_CPC_data   = { 0x24, 3, 7, 0, 0x0B3, 0x3F, 0x0C0, 0, 0x10, 0, 2, 3 };
 static struct DPB_s *DPB;
 
+static int g_num_diren = 32;
+static int g_record_size = 128;
+
+int g_base_track;
+int g_block_size;
+int g_num_sector_per_block;
+int g_diren_table_index;
+int g_num_record_per_sector;
+int g_num_record_per_block;
+int g_num_sector_in_diren_table;
+int g_num_file_per_sector;
+
+
 static
 void hex_dump(u8 *buf, int offset, int len)
 {
@@ -133,22 +146,19 @@ void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest)
 static
 int find_dir_entry(FILE *fp, char *file_name, struct cpm_diren_s *dest, u8 extent)
 {
-    int base_track;
     int i;
 
     assert(dest);
 
     memset(dest, 0, sizeof(struct cpm_diren_s));
 
-    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
-
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int j;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             struct cpm_diren_s dir;
             char full_file_name[13];
             int file_found;
@@ -175,18 +185,15 @@ int find_dir_entry(FILE *fp, char *file_name, struct cpm_diren_s *dest, u8 exten
 static
 void init_alloc_table(FILE *fp)
 {
-    int base_track;
     int i;
 
-    base_track  = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
-
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int j;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             int k;
             struct cpm_diren_s dir;
 
@@ -277,6 +284,7 @@ void init_track_info(struct cpcemu_track_info_s *dest,
     }
 }
 
+static
 void init_sector_skew_table(FILE *fp)
 {
     struct cpcemu_track_info_s track_info;
@@ -301,20 +309,18 @@ void init_sector_skew_table(FILE *fp)
 
 int cpm_find_empty_diren_index(FILE *fp)
 {
-    int base_track;
     int i;
     int counter;
 
-    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
     counter    = 0;
 
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int j;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             struct cpm_diren_s dir;
 
             memset(&dir, 0, sizeof(dir));
@@ -336,40 +342,36 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index)
     int diren_sector;
     int diren_sector_offset;
     u8 buffer[SIZ_SECTOR];
-    int base_track;
 
-    base_track          = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
-    diren_sector        = (diren_index * 32) / SIZ_SECTOR;
-    diren_sector_offset = (diren_index * 32) % SIZ_SECTOR;
+    diren_sector        = (diren_index * g_num_diren) / SIZ_SECTOR;
+    diren_sector_offset = (diren_index * g_num_diren) % SIZ_SECTOR;
 
-    read_logical_sector(fp, base_track, diren_sector, buffer);
+    read_logical_sector(fp, g_base_track, diren_sector, buffer);
 
     memcpy(buffer + diren_sector_offset, dir, sizeof(*dir));
-    write_logical_sector(fp, base_track, diren_sector, buffer);
+    write_logical_sector(fp, g_base_track, diren_sector, buffer);
 }
 
 int cpm_del(FILE *fp, char *file_name)
 {
-    int base_track;
     int i;
     int file_deleted;
 
     assert(fp);
     assert(file_name);
 
-    base_track   = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
     file_deleted = 0;
 
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int file_found;
         int j;
 
         file_found = 0;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             struct cpm_diren_s dir;
             char full_file_name[13];
 
@@ -390,7 +392,7 @@ int cpm_del(FILE *fp, char *file_name)
         }
 
         if (file_found) {
-            write_logical_sector(fp, base_track, i, buffer);
+            write_logical_sector(fp, g_base_track, i, buffer);
         }
     }
 
@@ -398,31 +400,21 @@ int cpm_del(FILE *fp, char *file_name)
 }
 
 static
-void convert_alblock(int alloc_index, u8 sector_offset, int *track, int *sector)
+void convert_AL_to_track_sector(u8 AL, int *track, int *sector)
 {
-    int dest_record_offset;
-    int num_record_per_block;
-    int num_record_per_sector;
-    int block_size;
+    int sector_offset;
 
-    block_size            = 128 << DPB->bsh;
-    num_record_per_sector = SIZ_SECTOR / 128;
-    num_record_per_block  = block_size / 128;
-
-    /* Convert Allocation block into disk track and sector */
-    dest_record_offset = (alloc_index * num_record_per_block) + sector_offset * num_record_per_sector;
-    *track = dest_record_offset / num_record_per_sector / NUM_SECTOR;
-    *sector = (dest_record_offset / num_record_per_sector) % NUM_SECTOR;
+    sector_offset = (AL * (g_record_size << DPB->bsh)) / SIZ_SECTOR;
+    *track        = g_base_track + sector_offset / NUM_SECTOR;
+    *sector       = sector_offset % NUM_SECTOR;
 }
 
+/* TODO: Revise this */
 void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos)
 {
     FILE *to_read;
     int new_diren_index;
     int cur_extent;
-    int block_size;
-    int base_track;
-    int base_alloc_index;
     struct amsdos_header_s amsdos_header;
     int amsdos_header_written;
 
@@ -432,10 +424,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         exit(1);
     }
 
-    base_track       = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
     cur_extent       = 0;
-    block_size       = 128 << DPB->bsh;
-    base_alloc_index = ((DPB->drm + 1) * 32) / block_size;
 
     amsdos_header_written = 0;
 
@@ -470,40 +459,38 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         for (dir_index = 0; dir_index < sizeof(dir.AL); dir_index++) {
             int j, k;
             int free_alloc_index;
-            int num_record_per_sector;
-            int num_sector_per_block;
             int dest_track;
             int dest_sector;
             u8 sector_buffer[SIZ_SECTOR];
 
-            free_alloc_index = get_free_alloc_index(base_track + base_alloc_index);
+            free_alloc_index = get_free_alloc_index(g_base_track + g_diren_table_index);
 
             if (free_alloc_index < 0) {
                 fprintf(stderr, "No space left in disk.\n");
                 exit(1);
             }
 
-            num_record_per_sector = SIZ_SECTOR / 128;
-            num_sector_per_block  = block_size / SIZ_SECTOR;
-
             dir.AL[dir_index] = free_alloc_index;
 
-            for (j = 0; j < num_sector_per_block; j++) {
+            for (j = 0; j < g_num_sector_per_block; j++) {
                 memset(sector_buffer, CPM_NO_FILE, SIZ_SECTOR);
 
-                for (k = 0; k < num_record_per_sector; k++) {
+                for (k = 0; k < g_num_record_per_sector; k++) {
                     dir.RC += 1;
 
                     if (amsdos && !amsdos_header_written) {
                         amsdos_header_written = 1;
-                        memcpy(sector_buffer, &amsdos_header, 128);
+                        memcpy(sector_buffer, &amsdos_header, g_record_size);
                         continue;
                     }
 
-                    fread(sector_buffer + k * 128, 1, 128, to_read);
+                    fread(sector_buffer + k * g_record_size, 1, g_record_size, to_read);
 
                     if (feof(to_read)) {
-                        convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
+                        convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
+                        dest_track = dest_track + (dest_sector + j) / NUM_SECTOR;
+                        dest_sector = (dest_sector + j) % NUM_SECTOR;
+
                         write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
                         cpm_write_diren(fp, &dir, new_diren_index);
 
@@ -513,7 +500,11 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                     }
                 }
 
-                convert_alblock(free_alloc_index, j, &dest_track, &dest_sector);
+                convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
+                dest_track = dest_track + (dest_sector + j) / NUM_SECTOR;
+                dest_sector = (dest_sector + j) % NUM_SECTOR;
+
+                printf("* %.2d, %.2d, %.2d\n", free_alloc_index, dest_track, dest_sector);
                 write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
             }
         }
@@ -526,18 +517,15 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
 
 void cpm_dir(FILE *fp)
 {
-    int base_track;
     int i;
 
-    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
-
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int j;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             struct cpm_diren_s dir, extent_diren;
             char full_file_name[13];
             int system_file;
@@ -571,7 +559,7 @@ void cpm_dir(FILE *fp)
                 sum_RC += extent_diren.RC;
             }
 
-            file_size = ceil(sum_RC * 128.0 / 1024.0);
+            file_size = ceil(sum_RC * g_record_size / 1024.0);
 
             printf("%13s\t%3dK\t%.6s\t%.9s\n", full_file_name, file_size,
                    system_file ? "system" : "",
@@ -579,6 +567,39 @@ void cpm_dir(FILE *fp)
         }
     }
 }
+
+void cpm_info(FILE *fp, char *file_name)
+{
+    int i;
+
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
+        u8 buffer[SIZ_SECTOR];
+        int j;
+
+        read_logical_sector(fp, g_base_track, i, buffer);
+
+        for (j = 0; j < g_num_file_per_sector; j++) {
+            struct cpm_diren_s dir, extent_diren;
+            char full_file_name[13];
+            int extent_index;
+
+            extent_index = 1;
+
+            memset(&extent_diren, 0, sizeof(dir));
+            memset(&dir, 0, sizeof(dir));
+            memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
+
+            normalize_filename(full_file_name, &dir);
+
+            if (stricmp(full_file_name, file_name) != 0) {
+                continue;
+            }
+
+            /* Print track num, sector_id pairs. */
+        }
+    }
+}
+
 
 void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len, int text)
 {
@@ -623,23 +644,17 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
     fwrite(buf, 1, len, *fp);
 }
 
-void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_file, FILE **write_file,
+static
+void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_file,
                     int text)
 {
-    int block_size;
-    int num_sector_per_block;
     int k;
-
-    block_size           = 128 << DPB->bsh;
-    num_sector_per_block = block_size / SIZ_SECTOR;
 
     for (k = 0; k < sizeof(dir->AL); k++) {
         int h, s;
         int is_last_AL;
-        int sector_offset;
         int sector;
         int track;
-        int byte_offset;
         int record_counter;
 
         is_last_AL = 0;
@@ -651,43 +666,39 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
             is_last_AL = 1;
         }
 
-        byte_offset     = dir->AL[k] * block_size;
-        sector_offset   = byte_offset / SIZ_SECTOR;
-        track           = base_track + sector_offset / NUM_SECTOR;
-        sector          = sector_offset % NUM_SECTOR;
-        record_counter  = 0;
-
-        if (!byte_offset) {
+        if (!dir->AL[k]) {
             break;
         }
 
-        for (s = 0; s < num_sector_per_block; s++) {
+        convert_AL_to_track_sector(dir->AL[k], &track, &sector);
+        record_counter = 0;
+
+        for (s = 0; s < g_num_sector_per_block; s++) {
             u8 block_buffer[SIZ_SECTOR];
             int cur_sector;
             int cur_track;
-            int num_record_per_sector;
-            int skip_amsdos;
-            int has_amsdos_header;
 
             cur_sector            = (sector + s) % NUM_SECTOR;
             cur_track             = track + (sector + s) / NUM_SECTOR;
-            num_record_per_sector = SIZ_SECTOR / 128;
 
             read_logical_sector(fp, cur_track, cur_sector, block_buffer);
 
-            /* If the first extent, and the first track and sector, then it's header area */
-            has_amsdos_header = amsdos_header_exists((struct amsdos_header_s *) block_buffer);
-            skip_amsdos = dir->EX == 0 && cur_track == track && cur_sector == sector
-                && has_amsdos_header;
-
-            for (h = 0; h < num_record_per_sector; h++) {
+            for (h = 0; h < g_num_record_per_sector; h++) {
                 if (to_file) {
-                    if (skip_amsdos && h == 0) {
-                        continue;
+                    if (h == 0) {
+                        int skip_amsdos;
+                        int has_amsdos_header;
+
+                        has_amsdos_header = amsdos_header_exists((struct amsdos_header_s *) block_buffer);
+                        skip_amsdos = dir->EX == 0 && cur_track == track && cur_sector == sector
+                            && has_amsdos_header;
+                        if (skip_amsdos) {
+                            continue;
+                        }
                     }
-                    cpm_dump_append_to_file(dir, write_file, block_buffer + h * 128, 128, text);
+                    cpm_dump_append_to_file(dir, write_file, block_buffer + h * g_record_size, g_record_size, text);
                 } else {
-                    hex_dump(block_buffer + h * 128, byte_offset + s * SIZ_SECTOR + h * 128, 128);
+                    hex_dump(block_buffer + h * g_record_size, (dir->AL[k] * g_block_size) + s * SIZ_SECTOR + h * g_record_size, g_record_size);
                 }
 
                 if (is_last_AL && (record_counter + 1) >= dir->RC) { /* ?? */
@@ -703,21 +714,19 @@ void cpm_dump_entry(FILE *fp, struct cpm_diren_s *dir, u8 base_track, int to_fil
 void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
 {
     FILE *write_file;
-    int base_track;
     int i;
     int file_found;
 
     file_found = 0;
     write_file = 0;
-    base_track = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
 
-    for (i = 0; i < NUM_DIR_SECTORS; i++) {
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
         int j;
 
-        read_logical_sector(fp, base_track, i, buffer);
+        read_logical_sector(fp, g_base_track, i, buffer);
 
-        for (j = 0; j < NUM_FILE_PER_SECTOR; j++) {
+        for (j = 0; j < g_num_file_per_sector; j++) {
             struct cpm_diren_s dir, extent_diren;
             char full_file_name[13];
             int extent_index;
@@ -734,10 +743,10 @@ void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
                 continue;
             }
 
-            cpm_dump_entry(fp, &dir, base_track, to_file, &write_file, text);
+            dump_extent(fp, &dir, to_file, &write_file, text);
 
             while (find_dir_entry(fp, full_file_name, &extent_diren, extent_index++) != 0) {
-                cpm_dump_entry(fp, &dir, base_track, to_file, &write_file, text);
+                dump_extent(fp, &dir, to_file, &write_file, text);
             }
 
             if (write_file) {
@@ -752,7 +761,6 @@ void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
         printf("File %s not found.\n", file_name);
     }
 }
-
 
 void cpm_new(FILE *fp)
 {
@@ -797,7 +805,26 @@ void init_disk_params(FILE *fp)
         return;
     }
 
-    NUM_DIR_SECTORS     = ((DPB->drm + 1) * 32) / SIZ_SECTOR;
-    NUM_FILE_PER_SECTOR = SIZ_SECTOR / 32;
+    g_base_track                 = check_disk_type(fp, CPM_SYSTEM_DISK) ? 2 : 0;
+    g_block_size                 = g_record_size << DPB->bsh;
+    g_num_sector_per_block       = g_block_size / SIZ_SECTOR;
+    g_diren_table_index          = ((DPB->drm + 1) * g_num_diren) / g_block_size;
+    g_num_record_per_sector      = SIZ_SECTOR / g_record_size;
+    g_num_record_per_block       = g_block_size / g_record_size;
+    g_num_sector_in_diren_table  = ((DPB->drm + 1) * g_num_diren) / SIZ_SECTOR;
+    g_num_file_per_sector        = SIZ_SECTOR / g_num_diren;
+
+#if 0
+    printf("g_base_track                 = %d\n", g_base_track);
+    printf("g_block_size                 = %d\n", g_block_size);
+    printf("g_num_sector_per_block       = %d\n", g_num_sector_per_block);
+    printf("g_diren_table_index          = %d\n", g_diren_table_index);
+    printf("g_num_record_per_sector      = %d\n", g_num_record_per_sector);
+    printf("g_num_record_per_block       = %d\n", g_num_record_per_block);
+    printf("g_num_sector_in_diren_table  = %d\n", g_num_sector_in_diren_table);
+    printf("g_num_file_per_sector        = %d\n", g_num_file_per_sector);
+#endif
+
+    init_sector_skew_table(fp);
 }
 

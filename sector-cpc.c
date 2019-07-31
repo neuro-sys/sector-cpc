@@ -171,6 +171,12 @@ struct getopts_s {
 
         struct {
             char *file_name;
+
+            int valid;
+        } info;
+
+        struct {
+            char *file_name;
             u16 entry_addr;
             u16 exec_addr;
 
@@ -241,6 +247,15 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
                 opts->file.dir.valid = 1;
             }
 
+            if (strcmp(argv[i], "info") == 0) {
+                if (i + 1 == argc) {
+                    print_usage_and_exit();
+                }
+
+                opts->file.info.valid = 1;
+                opts->file.dump.file_name = argv[i + 1];
+            }
+
             if (strcmp(argv[i], "dump") == 0) {
                 if (i + 1 == argc) {
                     print_usage_and_exit();
@@ -294,6 +309,7 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
     if (opts->file.valid
         && !opts->file.dump.valid
         && !opts->file.dir.valid
+        && !opts->file.info.valid
         && !opts->file.extract.valid
         && !opts->file.insert.valid
         && !opts->file.del.valid) {
@@ -332,10 +348,12 @@ int main(int argc, char *argv[])
 
         init_disk_params(fp);
 
-        init_sector_skew_table(fp);
-
         if (opts.file.dir.valid) {
             cpm_dir(fp);
+        }
+
+        if (opts.file.info.valid) {
+            cpm_info(fp, opts.file.info.file_name);
         }
 
         if (opts.file.dump.valid) {
