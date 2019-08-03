@@ -423,9 +423,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         fprintf(stderr, "Failed to open file %s for reading.\n", file_name);
         exit(1);
     }
-
-    cur_extent       = 0;
-
+    cur_extent            = 0;
     amsdos_header_written = 0;
 
     init_alloc_table(fp);
@@ -452,7 +450,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
         dir.EX = cur_extent;
         dir.S1 = 0;
         dir.S2 = 0;
-        dir.RC = 0;
+        dir.RC = 1;
         memset(&dir.AL, 0, sizeof(dir.AL));
 
         /* Filling Allocation Table, 16 entries, each 1024 bytes block */
@@ -476,11 +474,10 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                 memset(sector_buffer, CPM_NO_FILE, SIZ_SECTOR);
 
                 for (k = 0; k < g_num_record_per_sector; k++) {
-                    dir.RC += 1;
-
                     if (amsdos && !amsdos_header_written) {
                         amsdos_header_written = 1;
                         memcpy(sector_buffer, &amsdos_header, g_record_size);
+                        dir.RC += 1;
                         continue;
                     }
 
@@ -498,13 +495,14 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                         fclose(to_read);
                         return;
                     }
+
+                    dir.RC += 1;
                 }
 
                 convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
                 dest_track = dest_track + (dest_sector + j) / NUM_SECTOR;
                 dest_sector = (dest_sector + j) % NUM_SECTOR;
 
-                printf("* %.2d, %.2d, %.2d\n", free_alloc_index, dest_track, dest_sector);
                 write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
             }
         }
@@ -582,6 +580,7 @@ void cpm_info(FILE *fp, char *file_name)
             struct cpm_diren_s dir, extent_diren;
             char full_file_name[13];
             int extent_index;
+            int k;
 
             extent_index = 1;
 
@@ -595,11 +594,37 @@ void cpm_info(FILE *fp, char *file_name)
                 continue;
             }
 
-            /* Print track num, sector_id pairs. */
+            printf("Directory Entry: %.2d\n", dir.EX);
+            printf("-------------------\n");
+            printf(" U     FILE_NAME EX S1 S2 RC\n");
+            printf("%2d %13s %2d %2d %2d %2d\n",
+                   dir.user_number, full_file_name, dir.EX, dir.S1, dir.S2, dir.RC);
+            printf("\n");
+            printf("Allocation block\n");
+            printf("----------------\n");
+            for (k = 0; k < 16; k++) {
+                printf("%.2d ", dir.AL[k]);
+            }
+            printf("\n");
+            printf("\n");
+            printf("Track, Sector pairs\n");
+            printf("-------------------\n");
+            for (k = 0; k < 16; k++) {
+                int track;
+                int sector;
+
+                if (!dir.AL[k]) {
+                    break;
+                }
+
+                convert_AL_to_track_sector(dir.AL[k], &track, &sector);
+                /* TODO: Print intermediate sectors, and take dir.RC into account */
+                printf("0x%.2x, 0x%.2x\n", track, sector);
+            }
+            printf("\n");
         }
     }
 }
-
 
 void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len, int text)
 {
@@ -746,7 +771,7 @@ void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
             dump_extent(fp, &dir, to_file, &write_file, text);
 
             while (find_dir_entry(fp, full_file_name, &extent_diren, extent_index++) != 0) {
-                dump_extent(fp, &dir, to_file, &write_file, text);
+                dump_extent(fp, &extent_diren, to_file, &write_file, text);
             }
 
             if (write_file) {
@@ -827,4 +852,3 @@ void init_disk_params(FILE *fp)
 
     init_sector_skew_table(fp);
 }
-

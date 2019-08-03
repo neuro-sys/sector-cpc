@@ -253,7 +253,7 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
                 }
 
                 opts->file.info.valid = 1;
-                opts->file.dump.file_name = argv[i + 1];
+                opts->file.info.file_name = argv[i + 1];
             }
 
             if (strcmp(argv[i], "dump") == 0) {
