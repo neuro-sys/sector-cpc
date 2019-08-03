@@ -136,6 +136,7 @@ void print_usage_and_exit()
     printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
            "                                      Insert file on host system into disk.\n");
     printf("    del <file_name>                   Delete file from disk.\n");
+    printf("    info <file_name>                  Print info about file in disk.\n");
     printf("\n");
     printf("Notes:\n");
     printf(" - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"

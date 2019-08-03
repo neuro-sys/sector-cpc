@@ -596,8 +596,8 @@ void cpm_info(FILE *fp, char *file_name)
 
             printf("Directory Entry: %.2d\n", dir.EX);
             printf("-------------------\n");
-            printf(" U     FILE_NAME EX S1 S2 RC\n");
-            printf("%2d %13s %2d %2d %2d %2d\n",
+            printf(" U     FILE_NAME EX S1 S2  RC\n");
+            printf("%.2d %13s %.2d %.2d %.2d %.3d\n",
                    dir.user_number, full_file_name, dir.EX, dir.S1, dir.S2, dir.RC);
             printf("\n");
             printf("Allocation block\n");

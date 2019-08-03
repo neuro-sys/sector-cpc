@@ -9,9 +9,17 @@ set(SOURCES
   amsdos.c
 )
 
+set(TEST_SOURCES
+  tests.c
+  cpm.c
+  cpcemu.c
+  amsdos.c
+)
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} m)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 90)
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_EXTENSIONS false)
 
+add_executable(tests ${TEST_SOURCES})

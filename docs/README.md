@@ -20,7 +20,7 @@ Options:
     insert <file_name> [<entry_addr>, <exec_addr>]
                                       Insert file on host system into disk.
     del <file_name>                   Delete file from disk.
-
+    info <file_name>                  Print info about file in disk.
 Notes:
  - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
     extracting file records of every 128 bytes, an ASCII file past SUB character is garbage
@@ -120,4 +120,50 @@ Create a disk, insert an executable binary at load address 0x8000 and execute ad
 
 ```
 ./sector-cpc --new test.dsk --file test.dsk insert copper.bin 8000 8000
+```
+
+Print info about file in disk image:
+
+```
+./sector-cpc --file test.dsk info test.bin
+Directory Entry: 00
+-------------------
+ U     FILE_NAME EX S1 S2  RC
+00      TEST.BIN 00 00 00 129
+
+Allocation block
+----------------
+02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17
+
+Track, Sector pairs
+-------------------
+0x00, 0x04
+0x00, 0x06
+0x00, 0x08
+0x01, 0x01
+0x01, 0x03
+0x01, 0x05
+0x01, 0x07
+0x02, 0x00
+0x02, 0x02
+0x02, 0x04
+0x02, 0x06
+0x02, 0x08
+0x03, 0x01
+0x03, 0x03
+0x03, 0x05
+0x03, 0x07
+
+Directory Entry: 01
+-------------------
+ U     FILE_NAME EX S1 S2  RC
+00      TEST.BIN 01 00 00 005
+
+Allocation block
+----------------
+18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+Track, Sector pairs
+-------------------
+0x04, 0x00
 ```
