@@ -34,12 +34,11 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     for (i = 0; i < TEST_FILE_SIZE_BYTES; i++) {
         char c = rand() % 255;
-
         fwrite(&c, 1, 1, test_file);
     }
+    fclose(test_file);
 
     image = fopen(TEST_DISK, "rb+");
-
     init_disk_params(image);
 
     cpm_insert(image, TEST_FILE, 0, 0, 1);
