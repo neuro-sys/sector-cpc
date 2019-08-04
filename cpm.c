@@ -485,7 +485,7 @@ void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, 
             free_alloc_index = get_free_alloc_index(g_base_track + g_diren_table_index);
 
             if (free_alloc_index < 0) {
-                fprintf(stderr, "No space left in disk.\n");
+                fprintf(stderr, "No space left on disk.\n");
                 exit(1);
             }
 

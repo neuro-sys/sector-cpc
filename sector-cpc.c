@@ -119,7 +119,7 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
-#define VERSION "0.1.0"
+#define VERSION "0.2.0"
 
 void print_usage_and_exit()
 {
