@@ -11,7 +11,7 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
-const char *TEST_FILE = "test.bin";
+const char *TEST_FILE = "TEST.BIN";
 const char *TEST_COPY_FILE = "test-orig.bin";
 const char *TEST_DISK = "test.dsk";
 

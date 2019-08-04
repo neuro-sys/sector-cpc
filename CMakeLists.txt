@@ -16,10 +16,15 @@ set(TEST_SOURCES
   amsdos.c
 )
 
+if (UNIX)
+  set(LIB_DEPENDENCIES m)
+endif()
+
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} m)
+target_link_libraries(${PROJECT_NAME} ${LIB_DEPENDENCIES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_STANDARD 90)
 set_property(TARGET ${PROJECT_NAME} PROPERTY C_EXTENSIONS false)
 
 add_executable(tests ${TEST_SOURCES})
+target_link_libraries(tests ${LIB_DEPENDENCIES})

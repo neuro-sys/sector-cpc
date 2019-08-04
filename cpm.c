@@ -396,6 +396,8 @@ int cpm_del(FILE *fp, const char *file_name)
         }
     }
 
+    init_sector_skew_table(fp);
+
     return file_deleted;
 }
 
