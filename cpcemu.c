@@ -5,10 +5,12 @@
 
 #include "platformdef.h"
 
-char *CPCEMU_HEADER_STD   = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n";
-char *CPCEMU_HEADER_EX    = "EXTENDED CPC DSK File\r\nDisk-Info\r\n";
-char *CPCEMU_CREATOR      = "AMS-DSK\r\n";
-char *CPCEMU_TRACK_HEADER = "Track-Info\r\n";
+const char *CPCEMU_HEADER_STD   = "MV - CPCEMU Disk-File\r\nDisk-Info\r\n";
+const char *CPCEMU_HEADER_EX    = "EXTENDED CPC DSK File\r\nDisk-Info\r\n";
+const char *CPCEMU_CREATOR      = "AMS-DSK\r\n";
+const char *CPCEMU_TRACK_HEADER = "Track-Info\r\n";
+
+u8 g_sector_skew_table[NUM_SECTOR];
 
 void read_disc_info(FILE *fp, struct cpcemu_disc_info_s *info)
 {
@@ -81,7 +83,7 @@ int get_logical_sector(FILE *fp, u8 sector)
 {
     assert(fp);
 
-    return sector_skew_table[(int) sector];
+    return g_sector_skew_table[(int) sector];
 }
 
 #if 0

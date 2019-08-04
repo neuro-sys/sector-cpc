@@ -215,8 +215,8 @@ void init_alloc_table(FILE *fp)
 
 static
 void init_disk_info(struct cpcemu_disc_info_s *dest,
-                    char *header,
-                    char *creator,
+                    const char *header,
+                    const char *creator,
                     u8 num_tracks,
                     u8 num_heads,
                     u16 track_size)
@@ -253,7 +253,7 @@ int get_free_alloc_index(int base_index)
 
 static
 void init_track_info(struct cpcemu_track_info_s *dest,
-                     char *header,
+                     const char *header,
                      u8 track_num,
                      u8 head_num)
 {
@@ -276,7 +276,7 @@ void init_track_info(struct cpcemu_track_info_s *dest,
 
         sector->track = track_num;
         sector->head = head_num;
-        sector->sector_id = CPM_DATA_DISK + sector_skew_table[i];
+        sector->sector_id = CPM_DATA_DISK + g_sector_skew_table[i];
         sector->sector_size = 2; /* ?? Make it dynamic */
         /* sector->FDC_status_reg1; /\* ?? *\/ */
         /* sector->FDC_status_reg2; /\* ?? *\/ */
@@ -301,7 +301,7 @@ void init_sector_skew_table(FILE *fp)
         int sector_id = track_info.sector_info_table[i].sector_id;
         int logical_sector = sector_id - (is_system_disk ? CPM_SYSTEM_DISK : CPM_DATA_DISK);
 
-        sector_skew_table[logical_sector] = i;
+        g_sector_skew_table[logical_sector] = i;
     }
 }
 
@@ -825,7 +825,7 @@ void cpm_new(FILE *fp)
     int sector;
     u8 skew_table[] = { 0, 5, 1, 6, 2, 7, 3, 8, 4 }; /* ?? */
 
-    memcpy(sector_skew_table, skew_table, sizeof(skew_table));
+    memcpy(g_sector_skew_table, skew_table, sizeof(skew_table));
 
     init_disk_info(&disk_info, CPCEMU_HEADER_STD, CPCEMU_CREATOR, NUM_TRACK, 1, SIZ_TRACK);
     write_disc_info(fp, &disk_info);

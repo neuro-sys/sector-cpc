@@ -13,10 +13,10 @@
 #define SIZ_TRACK           (CPCEMU_TRACK_OFFSET + NUM_SECTOR * SIZ_SECTOR)
 #define SIZ_TOTAL           (NUM_TRACK * SIZ_TRACK)
 
-extern char *CPCEMU_HEADER_STD;
-extern char *CPCEMU_HEADER_EX;
-extern char *CPCEMU_CREATOR;
-extern char *CPCEMU_TRACK_HEADER;
+extern const char *CPCEMU_HEADER_STD;
+extern const char *CPCEMU_HEADER_EX;
+extern const char *CPCEMU_CREATOR;
+extern const char *CPCEMU_TRACK_HEADER;
 
 /* Tightly packed disc data structures */
 #pragma pack(push)
@@ -81,8 +81,7 @@ struct cpcemu_track_info_s {
 
 #pragma pack(pop)
 
-extern u8 sector_skew_table[NUM_SECTOR];
-u8 sector_skew_table[NUM_SECTOR];
+extern u8 g_sector_skew_table[NUM_SECTOR];
 
 void read_disc_info(FILE *fp, struct cpcemu_disc_info_s *info);
 void write_disc_info(FILE *fp, struct cpcemu_disc_info_s *info);
@@ -90,7 +89,6 @@ void read_track_info(FILE *fp, u8 track, struct cpcemu_track_info_s *track_info)
 void write_track_info(FILE *fp, u8 track, struct cpcemu_track_info_s *track_info);
 int check_disk_type(FILE *fp, u8 sector_id);
 int check_extended(FILE *fp);
-int get_logical_sector(FILE *fp, u8 sector);
 void read_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR]);
 void write_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR]);
 
