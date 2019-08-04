@@ -42,12 +42,6 @@ cmake ..
 make
 ```
 
-Or you can simply do:
-
-```
-cc *.c -osector-cpc
-```
-
 ## Examples
 
 Create a new disk image:

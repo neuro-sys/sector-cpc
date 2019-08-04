@@ -11,11 +11,12 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
-char *TEST_FILE = "test.bin";
-char *TEST_COPY_FILE = "test-orig.bin";
-char *TEST_DISK = "test.dsk";
+const char *TEST_FILE = "test.bin";
+const char *TEST_COPY_FILE = "test-orig.bin";
+const char *TEST_DISK = "test.dsk";
 
-int TEST_FILE_SIZE_BYTES = 17000;
+const int ONE_TRACK_SIZE_BYTES = 16384;
+const int TEST_FILE_SIZE_BYTES = ONE_TRACK_SIZE_BYTES + 1;
 
 int main(int argc, char *argv[])
 {
@@ -42,13 +43,13 @@ int main(int argc, char *argv[])
     image = fopen(TEST_DISK, "rb+");
     init_disk_params(image);
 
-    cpm_insert(image, TEST_FILE, 0, 0, 0);
+    cpm_insert(image, (char *) TEST_FILE, 0, 0, 0);
     fclose(image);
 
     rename(TEST_FILE, TEST_COPY_FILE);
 
     image = fopen(TEST_DISK, "rb+");
-    cpm_dump(image, TEST_FILE, 1, 0);
+    cpm_dump(image, (char *) TEST_FILE, 1, 0);
     fclose(image);
 
     /* Compare two files byte by byte */
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
 
     remove(TEST_FILE);
     remove(TEST_COPY_FILE);
-    remove(TEST_DISK);
+    /* remove(TEST_DISK); */
 
     return 0;
 }

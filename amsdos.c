@@ -22,7 +22,7 @@ u16 header_checksum(struct amsdos_header_s *header)
     return sum;
 }
 
-void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 entry_addr, u16 exec_addr)
+void amsdos_new(FILE *fp, struct amsdos_header_s *dest, const char *file_name, u16 entry_addr, u16 exec_addr)
 {
     u16 data_length;
     struct cpm_diren_s filename_diren;

@@ -26,7 +26,7 @@ struct amsdos_header_s {
 };
 #pragma pack(pop)
 
-void amsdos_new(FILE *fp, struct amsdos_header_s *dest, char *file_name, u16 entry_addr, u16 exec_addr);
+void amsdos_new(FILE *fp, struct amsdos_header_s *dest, const char *file_name, u16 entry_addr, u16 exec_addr);
 int amsdos_header_exists(struct amsdos_header_s *header);
 
 

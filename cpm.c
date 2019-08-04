@@ -95,7 +95,7 @@ void normalize_filename(char *full_file_name, struct cpm_diren_s *dir)
 }
 
 /* ?? Improve */
-void denormalize_filename(char *full_file_name, struct cpm_diren_s *dest)
+void denormalize_filename(const char *full_file_name, struct cpm_diren_s *dest)
 {
     char buffer[1024];
     char *token;
@@ -352,7 +352,7 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index)
     write_logical_sector(fp, g_base_track, diren_sector, buffer);
 }
 
-int cpm_del(FILE *fp, char *file_name)
+int cpm_del(FILE *fp, const char *file_name)
 {
     int i;
     int file_deleted;
@@ -409,14 +409,31 @@ void convert_AL_to_track_sector(u8 AL, int *track, int *sector)
     *sector       = sector_offset % NUM_SECTOR;
 }
 
+static
+void add_offset_to_track_sector(int *track, int *sector, int offset)
+{
+    int new_track;
+    int new_sector;
+
+    assert(track);
+    assert(sector);
+
+    new_track = *track + (*sector + offset) / NUM_SECTOR;
+    new_sector = (*sector + offset) % NUM_SECTOR;
+
+    *track = new_track;
+    *sector = new_sector;
+}
+
 /* TODO: Revise this */
-void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int amsdos)
+void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, int amsdos)
 {
     FILE *to_read;
     int new_diren_index;
     int cur_extent;
     struct amsdos_header_s amsdos_header;
     int amsdos_header_written;
+    long file_size;
 
     to_read = fopen(file_name, "rb");
     if (!to_read) {
@@ -425,6 +442,10 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
     }
     cur_extent            = 0;
     amsdos_header_written = 0;
+
+    fseek(to_read, 0, SEEK_END);
+    file_size = ftell(to_read);
+    fseek(to_read, 0, SEEK_SET);
 
     init_alloc_table(fp);
 
@@ -474,6 +495,8 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                 memset(sector_buffer, CPM_NO_FILE, SIZ_SECTOR);
 
                 for (k = 0; k < g_num_record_per_sector; k++) {
+                    size_t n;
+
                     if (amsdos && !amsdos_header_written) {
                         amsdos_header_written = 1;
                         memcpy(sector_buffer, &amsdos_header, g_record_size);
@@ -481,12 +504,11 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                         continue;
                     }
 
-                    fread(sector_buffer + k * g_record_size, 1, g_record_size, to_read);
+                    n = fread(sector_buffer + k * g_record_size, 1, g_record_size, to_read);
 
-                    if (feof(to_read)) {
+                    if (feof(to_read) || n == 0 || ftell(to_read) == file_size) {
                         convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
-                        dest_track = dest_track + (dest_sector + j) / NUM_SECTOR;
-                        dest_sector = (dest_sector + j) % NUM_SECTOR;
+                        add_offset_to_track_sector(&dest_track, &dest_sector, j);
 
                         write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
                         cpm_write_diren(fp, &dir, new_diren_index);
@@ -500,8 +522,7 @@ void cpm_insert(FILE *fp, char *file_name, u16 entry_addr, u16 exec_addr, int am
                 }
 
                 convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
-                dest_track = dest_track + (dest_sector + j) / NUM_SECTOR;
-                dest_sector = (dest_sector + j) % NUM_SECTOR;
+                add_offset_to_track_sector(&dest_track, &dest_sector, j);
 
                 write_logical_sector(fp, dest_track, dest_sector, sector_buffer);
             }
@@ -566,7 +587,7 @@ void cpm_dir(FILE *fp)
     }
 }
 
-void cpm_info(FILE *fp, char *file_name)
+void cpm_info(FILE *fp, const char *file_name)
 {
     int i;
 
@@ -600,8 +621,8 @@ void cpm_info(FILE *fp, char *file_name)
             printf("%.2d %13s %.2d %.2d %.2d %.3d\n",
                    dir.user_number, full_file_name, dir.EX, dir.S1, dir.S2, dir.RC);
             printf("\n");
-            printf("Allocation block\n");
-            printf("----------------\n");
+            printf("Allocation blocks\n");
+            printf("-----------------\n");
             for (k = 0; k < 16; k++) {
                 printf("%.2d ", dir.AL[k]);
             }
@@ -612,14 +633,24 @@ void cpm_info(FILE *fp, char *file_name)
             for (k = 0; k < 16; k++) {
                 int track;
                 int sector;
+                int is_last;
+                int is_last_and_two_sectors;
 
                 if (!dir.AL[k]) {
                     break;
                 }
 
+                is_last = k != 15 && dir.AL[k + 1] == 0;
+                is_last_and_two_sectors = is_last && (dir.RC / g_num_record_per_sector > 0);
+
                 convert_AL_to_track_sector(dir.AL[k], &track, &sector);
-                /* TODO: Print intermediate sectors, and take dir.RC into account */
+
                 printf("0x%.2x, 0x%.2x\n", track, sector);
+
+                if (!is_last || is_last_and_two_sectors) {
+                    add_offset_to_track_sector(&track, &sector, 1);
+                    printf("0x%.2x, 0x%.2x\n", track, sector);
+                }
             }
             printf("\n");
         }
@@ -736,7 +767,7 @@ void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_fi
     }
 }
 
-void cpm_dump(FILE *fp, char *file_name, int to_file, int text)
+void cpm_dump(FILE *fp, const char *file_name, int to_file, int text)
 {
     FILE *write_file;
     int i;
