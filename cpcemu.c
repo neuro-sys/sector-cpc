@@ -79,13 +79,6 @@ int check_extended(FILE *fp)
     return strncmp("EXTENDED", disc_info.header, 8) == 0;
 }
 
-int get_logical_sector(FILE *fp, u8 sector)
-{
-    assert(fp);
-
-    return g_sector_skew_table[(int) sector];
-}
-
 #if 0
 void read_physical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR])
 {
@@ -111,7 +104,7 @@ void read_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR])
     /* printf("DEBUG - read_logical_sector (track: %d, sector: %d)\n", track, sector); */
 
     offset_track   = CPCEMU_INFO_OFFSET + (track * SIZ_TRACK);
-    logical_sector = get_logical_sector(fp, sector);
+    logical_sector = g_sector_skew_table[sector];
     offset_sector  = CPCEMU_TRACK_OFFSET + logical_sector * SIZ_SECTOR;
 
     fseek(fp, offset_track + offset_sector, SEEK_SET);
@@ -129,7 +122,7 @@ void write_logical_sector(FILE *fp, u8 track, u8 sector, u8 buffer[SIZ_SECTOR])
     /* printf("DEBUG - write_logical_sector (track: %d, sector: %d)\n", track, sector); */
 
     offset_track   = CPCEMU_INFO_OFFSET + (track * SIZ_TRACK);
-    logical_sector = get_logical_sector(fp, sector);
+    logical_sector = g_sector_skew_table[sector];
     offset_sector  = CPCEMU_TRACK_OFFSET + logical_sector * SIZ_SECTOR;
 
     fseek(fp, offset_track + offset_sector, SEEK_SET);
