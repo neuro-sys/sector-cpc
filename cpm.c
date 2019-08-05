@@ -677,7 +677,7 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
     normalize_filename(full_file_name, dir);
 
     if (!*fp) {
-        *fp = fopen(full_file_name, "w");
+        *fp = fopen(full_file_name, "wb");
         if (!*fp) {
             fprintf(stderr, "Failed to open file %s for writing.\n", full_file_name);
             exit(1);
@@ -706,7 +706,10 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
 #undef SUB
     }
 
-    fwrite(buf, 1, len, *fp);
+    if (fwrite(buf, 1, len, *fp) != len) {
+        fprintf(stderr, "Error writing to file.\n");
+        exit(1);
+    }
 }
 
 static
