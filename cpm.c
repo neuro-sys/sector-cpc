@@ -473,7 +473,7 @@ void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, 
         dir.EX = cur_extent;
         dir.S1 = 0;
         dir.S2 = 0;
-        dir.RC = 1;
+        dir.RC = 0;
         memset(&dir.AL, 0, sizeof(dir.AL));
 
         /* Filling Allocation Table, 16 entries, each 1024 bytes block */
@@ -508,6 +508,8 @@ void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, 
 
                     n = fread(sector_buffer + k * g_record_size, 1, g_record_size, to_read);
 
+                    dir.RC += 1;
+
                     if (feof(to_read) || n == 0 || ftell(to_read) == file_size) {
                         convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
                         add_offset_to_track_sector(&dest_track, &dest_sector, j);
@@ -519,8 +521,6 @@ void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, 
                         fclose(to_read);
                         return;
                     }
-
-                    dir.RC += 1;
                 }
 
                 convert_AL_to_track_sector(free_alloc_index, &dest_track, &dest_sector);
