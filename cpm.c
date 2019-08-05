@@ -652,12 +652,12 @@ void cpm_info(FILE *fp, const char *file_name)
                 is_last_and_two_sectors = is_last && (dir.RC / g_num_record_per_sector > 0);
 
                 convert_AL_to_track_sector(dir.AL[k], &track, &sector);
-                sector_id = g_sector_skew_table[sector] + first_sector_id;
+                sector_id = sector + first_sector_id;
                 printf("0x%.2x, 0x%.2x\n", track, sector_id);
 
                 if (!is_last || is_last_and_two_sectors) {
                     add_offset_to_track_sector(&track, &sector, 1);
-                    sector_id = g_sector_skew_table[sector] + first_sector_id;
+                    sector_id = sector + first_sector_id;
                     printf("0x%.2x, 0x%.2x\n", track, sector_id);
                 }
             }
