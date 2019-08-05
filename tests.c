@@ -1,6 +1,3 @@
-/*
-  cc ../tests.c ../cpm.c ../cpcemu.c ../amsdos.c  -lm -g -O0
- */
 #include <stdio.h>
 #include <assert.h>
 #include <time.h>
@@ -15,7 +12,7 @@ const char *TEST_FILE = "TEST.BIN";
 const char *TEST_COPY_FILE = "test-orig.bin";
 const char *TEST_DISK = "test.dsk";
 
-const int ONE_TRACK_SIZE_BYTES = 16384;
+#define ONE_TRACK_SIZE_BYTES 16384
 const int TEST_FILE_SIZE_BYTES = ONE_TRACK_SIZE_BYTES + 1;
 
 int main(int argc, char *argv[])
@@ -46,7 +43,11 @@ int main(int argc, char *argv[])
     cpm_insert(image, (char *) TEST_FILE, 0, 0, 0);
     fclose(image);
 
-    rename(TEST_FILE, TEST_COPY_FILE);
+    remove(TEST_COPY_FILE);
+    if (rename(TEST_FILE, TEST_COPY_FILE)) {
+        fprintf(stderr, "Failed to rename file from %s to %s.", TEST_FILE, TEST_COPY_FILE);
+        exit(1);
+    }
 
     image = fopen(TEST_DISK, "rb+");
     cpm_dump(image, (char *) TEST_FILE, 1, 0);
@@ -72,7 +73,7 @@ int main(int argc, char *argv[])
 
     remove(TEST_FILE);
     remove(TEST_COPY_FILE);
-    /* remove(TEST_DISK); */
+    remove(TEST_DISK);
 
     return 0;
 }
