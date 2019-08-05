@@ -592,6 +592,11 @@ void cpm_dir(FILE *fp)
 void cpm_info(FILE *fp, const char *file_name)
 {
     int i;
+    int first_sector_id;
+
+    first_sector_id = check_disk_type(fp, CPM_SYSTEM_DISK)
+      ? CPM_SYSTEM_DISK
+      : CPM_DATA_DISK;
 
     for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
@@ -635,6 +640,7 @@ void cpm_info(FILE *fp, const char *file_name)
             for (k = 0; k < 16; k++) {
                 int track;
                 int sector;
+                int sector_id;
                 int is_last;
                 int is_last_and_two_sectors;
 
@@ -646,12 +652,13 @@ void cpm_info(FILE *fp, const char *file_name)
                 is_last_and_two_sectors = is_last && (dir.RC / g_num_record_per_sector > 0);
 
                 convert_AL_to_track_sector(dir.AL[k], &track, &sector);
-
-                printf("0x%.2x, 0x%.2x\n", track, sector);
+                sector_id = g_sector_skew_table[sector] + first_sector_id;
+                printf("0x%.2x, 0x%.2x\n", track, sector_id);
 
                 if (!is_last || is_last_and_two_sectors) {
                     add_offset_to_track_sector(&track, &sector, 1);
-                    printf("0x%.2x, 0x%.2x\n", track, sector);
+                    sector_id = g_sector_skew_table[sector] + first_sector_id;
+                    printf("0x%.2x, 0x%.2x\n", track, sector_id);
                 }
             }
             printf("\n");
