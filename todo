@@ -1,1 +1,2 @@
-* Add a test. Create a disk image from a big file, and extract it, and compare the results.
+* DONE Add a test. Create a disk image from a big file, and extract it, and compare the results.
+* TODO Add ability to define starting track. It helps faster loading.
