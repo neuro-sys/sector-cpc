@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <limits.h>
 
 #include "platformdef.h"
 #include "cpcemu.h"
@@ -589,14 +590,81 @@ void cpm_dir(FILE *fp)
     }
 }
 
-void cpm_info(FILE *fp, const char *file_name)
+static void print_tracks_sectors_info(int tracks_sectors[512][2], int tracks_sectors_c)
+{
+    int i;
+    int tracks[40];
+    int tracks_c;
+
+    tracks_c = 0;
+    memset(tracks, 0, sizeof(tracks));
+
+    for (i = 0; i < tracks_sectors_c; i++) {
+        int j;
+        int track_inlist;
+        int track;
+
+        track_inlist = 0;
+        track = tracks_sectors[i][0];
+
+        for (j = 0; j < tracks_c; j++) {
+            if (track == tracks[j]) {
+                track_inlist = 1;
+            }
+        }
+
+        if (!track_inlist) {
+            tracks[tracks_c++] = track;
+        }
+    }
+
+    for (i = 0; i < tracks_c; i++) {
+        int j;
+        int min_sector;
+        int max_sector;
+        int track;
+
+        track = tracks[i];
+        min_sector = INT_MAX;
+        max_sector = INT_MIN;
+
+        for (j = 0; j < tracks_sectors_c; j++) {
+            int sector;
+
+            if (tracks_sectors[j][0] != track) {
+                continue;
+            }
+
+            sector = tracks_sectors[j][1];
+
+            if (min_sector > sector) {
+                min_sector = sector;
+            }
+
+            if (max_sector < sector) {
+                max_sector = sector;
+            }
+        }
+
+        printf("db 0x%.2x, 0x%.2x, 0x%.2x\n", track, min_sector, max_sector);
+    }
+
+    printf("db 0xff\n");
+}
+
+void cpm_info(FILE *fp, const char *file_name, int tracks_only)
 {
     int i;
     int first_sector_id;
+    int tracks_sectors[512][2];
+    int tracks_sectors_i;
 
     first_sector_id = check_disk_type(fp, CPM_SYSTEM_DISK)
       ? CPM_SYSTEM_DISK
       : CPM_DATA_DISK;
+
+    tracks_sectors_i = 0;
+    memset(tracks_sectors, 0, sizeof(tracks_sectors));
 
     for (i = 0; i < g_num_sector_in_diren_table; i++) {
         u8 buffer[SIZ_SECTOR];
@@ -622,21 +690,24 @@ void cpm_info(FILE *fp, const char *file_name)
                 continue;
             }
 
-            printf("Directory Entry: %.2d\n", dir.EX);
-            printf("-------------------\n");
-            printf(" U     FILE_NAME EX S1 S2  RC\n");
-            printf("%.2d %13s %.2d %.2d %.2d %.3d\n",
-                   dir.user_number, full_file_name, dir.EX, dir.S1, dir.S2, dir.RC);
-            printf("\n");
-            printf("Allocation blocks\n");
-            printf("-----------------\n");
-            for (k = 0; k < 16; k++) {
-                printf("%.2d ", dir.AL[k]);
+            if (!tracks_only) {
+                printf("Directory Entry: %.2d\n", dir.EX);
+                printf("-------------------\n");
+                printf(" U     FILE_NAME EX S1 S2  RC\n");
+                printf("%.2d %13s %.2d %.2d %.2d %.3d\n",
+                       dir.user_number, full_file_name, dir.EX, dir.S1, dir.S2, dir.RC);
+                printf("\n");
+                printf("Allocation blocks\n");
+                printf("-----------------\n");
+                for (k = 0; k < 16; k++) {
+                    printf("%.2d ", dir.AL[k]);
+                }
+                printf("\n");
+                printf("\n");
+                printf("Track, Sector pairs\n");
+                printf("-------------------\n");
             }
-            printf("\n");
-            printf("\n");
-            printf("Track, Sector pairs\n");
-            printf("-------------------\n");
+
             for (k = 0; k < 16; k++) {
                 int track;
                 int sector;
@@ -653,16 +724,34 @@ void cpm_info(FILE *fp, const char *file_name)
 
                 convert_AL_to_track_sector(dir.AL[k], &track, &sector);
                 sector_id = sector + first_sector_id;
-                printf("0x%.2x, 0x%.2x\n", track, sector_id);
+
+                if (!tracks_only) {
+                    printf("0x%.2x, 0x%.2x\n", track, sector_id);
+                }
+
+                tracks_sectors[tracks_sectors_i][0] = track;
+                tracks_sectors[tracks_sectors_i++][1] = sector_id;
 
                 if (!is_last || is_last_and_two_sectors) {
                     add_offset_to_track_sector(&track, &sector, 1);
                     sector_id = sector + first_sector_id;
-                    printf("0x%.2x, 0x%.2x\n", track, sector_id);
+                    if (!tracks_only) {
+                        printf("0x%.2x, 0x%.2x\n", track, sector_id);
+                    }
+                    tracks_sectors[tracks_sectors_i][0] = track;
+                    tracks_sectors[tracks_sectors_i++][1] = sector_id;
                 }
             }
-            printf("\n");
+
+            if (!tracks_only) {
+                printf("\n");
+            }
         }
+    }
+
+    if (tracks_only) {
+        printf("; track number, first sector, last sector for the file %s\n", file_name);
+        print_tracks_sectors_info(tracks_sectors, tracks_sectors_i);
     }
 }
 

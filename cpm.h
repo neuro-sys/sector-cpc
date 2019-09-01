@@ -46,7 +46,7 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index);
 void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, int amsdos);
 int cpm_del(FILE *fp, const char *file_name);
 void cpm_dir(FILE *fp);
-void cpm_info(FILE *fp, const char *file_name);
+void cpm_info(FILE *fp, const char *file_name, int tracks_only);
 void cpm_dump(FILE *fp, const char *file_name, int to_file, int text);
 void cpm_new(FILE *fp);
 void init_disk_params(FILE *fp);

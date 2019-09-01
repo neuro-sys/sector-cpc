@@ -119,7 +119,7 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
-#define VERSION "0.2.0"
+#define VERSION "0.2.1"
 
 void print_usage_and_exit()
 {
@@ -136,7 +136,7 @@ void print_usage_and_exit()
     printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
            "                                      Insert file on host system into disk.\n");
     printf("    del <file_name>                   Delete file from disk.\n");
-    printf("    info <file_name>                  Print info about file in disk.\n");
+    printf("    info <file_name> [--tracks]       Print info about file in disk.\n");
     printf("\n");
     printf("Notes:\n");
     printf(" - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When\n"
@@ -172,6 +172,7 @@ struct getopts_s {
 
         struct {
             char *file_name;
+            int tracks;
 
             int valid;
         } info;
@@ -255,6 +256,10 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
                 opts->file.info.valid = 1;
                 opts->file.info.file_name = argv[i + 1];
+
+                if (i + 2 != argc && strcmp("--tracks", argv[i + 2]) == 0) {
+                    opts->file.info.tracks = 1;
+                }
             }
 
             if (strcmp(argv[i], "dump") == 0) {
@@ -354,7 +359,7 @@ int main(int argc, char *argv[])
         }
 
         if (opts.file.info.valid) {
-            cpm_info(fp, opts.file.info.file_name);
+            cpm_info(fp, opts.file.info.file_name, opts.file.info.tracks);
         }
 
         if (opts.file.dump.valid) {

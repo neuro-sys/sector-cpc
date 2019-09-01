@@ -11,7 +11,7 @@ Arguments:
   --file filename.dsk <command>
   --new  filename.dsk
   --no-amsdos                         Do not add AMSDOS header.
-  --text                              Treat file as text, using SUB byte as EOF marker. [0]
+  --text                              Treat file as text, and SUB byte as EOF marker. [0]
 Options:
   <command>:
     dir                               Lists contents of disk image.
@@ -20,15 +20,16 @@ Options:
     insert <file_name> [<entry_addr>, <exec_addr>]
                                       Insert file on host system into disk.
     del <file_name>                   Delete file from disk.
-    info <file_name>                  Print info about file in disk.
+    info <file_name> [--tracks]       Print info about file in disk.
+
 Notes:
  - [0] In CP/M 2.2 there is no way to distinguish if a file is text or binary. When
-    extracting file records of every 128 bytes, an ASCII file past SUB character is garbage
+    extracting file records of every 128 bytes, an ASCII file past SUB byte is garbage
     as it signifies end of file. Use this flag when extracing text files.
 
  - [1] <entry_addr> and <exec_addr> are in base 16, non-numeric characters will be ignored.
-    Also give space between the two.
-    E.g. 0x8000, or &8000 and 8000h are valid.
+    Also give space between the two.    E.g. 0x8000, or &8000 and 8000h are valid.
+
 ```
 
 ## Build
