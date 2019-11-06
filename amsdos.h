@@ -28,6 +28,7 @@ struct amsdos_header_s {
 
 void amsdos_new(FILE *fp, struct amsdos_header_s *dest, const char *file_name, u16 entry_addr, u16 exec_addr);
 int amsdos_header_exists(struct amsdos_header_s *header);
+void amsdos_print_header(struct amsdos_header_s *header);
 
 
 #endif

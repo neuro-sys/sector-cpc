@@ -749,6 +749,24 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
         }
     }
 
+    if (!tracks_only) {
+        int first_track = tracks_sectors[0][0];
+        u8 buffer[SIZ_SECTOR];
+        int has_amsdos_header;
+
+        read_logical_sector(fp, first_track, 0, buffer);
+
+        has_amsdos_header = amsdos_header_exists((struct amsdos_header_s *) buffer);
+
+        if (has_amsdos_header) {
+            struct amsdos_header_s amsdos_header;
+
+            memcpy(&amsdos_header, buffer, g_record_size);
+
+            amsdos_print_header(&amsdos_header);
+        }
+    }
+
     if (tracks_only) {
         printf("; track number, first sector, last sector for the file %s\n", file_name);
         print_tracks_sectors_info(tracks_sectors, tracks_sectors_i);

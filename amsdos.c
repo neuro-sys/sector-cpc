@@ -71,3 +71,36 @@ int amsdos_header_exists(struct amsdos_header_s *header)
 
     return header_checksum(header) == header->check_sum;
 }
+
+static
+char *get_filetype(u8 filetype)
+{
+    if (filetype == 0) {
+        return "Basic";
+    }
+
+    if (filetype == 1) {
+        return "Protected";
+    }
+
+    if (filetype == 2) {
+        return "Binary";
+    }
+}
+
+void amsdos_print_header(struct amsdos_header_s *header)
+{
+    assert(header);
+
+    printf("AMSDOS Header\n");
+    printf("-------------\n");
+    printf("User number          : %d\n", header->user_number);
+    printf("Filename             : %.8s\n", header->filename);
+    printf("Extension            : %.3s\n", header->extension);
+    printf("Filetype             : %s\n", get_filetype(header->filetype));
+    printf("Data length          : 0x%.4x (%d)\n", header->data_length, header->data_length);
+    printf("Loading address      : 0x%.4x\n", header->data_location);
+    printf("Logical length       : 0x%.4x (%d)\n", header->logical_length, header->logical_length);
+    printf("Entry adress         : 0x%.4x\n", header->entry_address);
+    printf("Checksum:            : 0x%.4x\n", header->check_sum);
+}
