@@ -751,10 +751,11 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
 
     if (!tracks_only) {
         int first_track = tracks_sectors[0][0];
+        int first_sector = tracks_sectors[0][1] - first_sector_id;
         u8 buffer[SIZ_SECTOR];
         int has_amsdos_header;
 
-        read_logical_sector(fp, first_track, 0, buffer);
+        read_logical_sector(fp, first_track, first_sector, buffer);
 
         has_amsdos_header = amsdos_header_exists((struct amsdos_header_s *) buffer);
 
