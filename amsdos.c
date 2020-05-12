@@ -1,5 +1,6 @@
 #include "amsdos.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 
@@ -86,6 +87,9 @@ char *get_filetype(u8 filetype)
     if (filetype == 2) {
         return "Binary";
     }
+
+    fprintf(stderr, "Invalid filetype: %d\n", filetype);
+    exit(-1);
 }
 
 void amsdos_print_header(struct amsdos_header_s *header)

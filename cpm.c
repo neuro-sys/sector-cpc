@@ -458,7 +458,7 @@ void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, 
 
     while (1) {
         struct cpm_diren_s dir;
-        int dir_index;
+        unsigned dir_index;
 
         memset(&dir, 0, sizeof(dir));
 
@@ -824,14 +824,16 @@ static
 void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_file,
                     int text)
 {
-    int k;
+    unsigned k;
+    int record_counter;
+
+    record_counter = 0;
 
     for (k = 0; k < sizeof(dir->AL); k++) {
         int h, s;
         int is_last_AL;
         int sector;
         int track;
-        int record_counter;
 
         is_last_AL = 0;
 
@@ -847,7 +849,6 @@ void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_fi
         }
 
         convert_AL_to_track_sector(dir->AL[k], &track, &sector);
-        record_counter = 0;
 
         for (s = 0; s < g_num_sector_per_block; s++) {
             u8 block_buffer[SIZ_SECTOR];
