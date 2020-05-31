@@ -88,8 +88,7 @@ char *get_filetype(u8 filetype)
         return "Binary";
     }
 
-    fprintf(stderr, "Invalid filetype: %d\n", filetype);
-    exit(-1);
+    return "Unrecognized filetype";
 }
 
 void amsdos_print_header(struct amsdos_header_s *header)

@@ -774,7 +774,8 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
     }
 }
 
-void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len, int text)
+/* Return -1 for exit early */
+int cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t len, int text)
 {
     char full_file_name[13];
 
@@ -809,7 +810,7 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
 
         if (sub_found) {
             fwrite(buf, 1, i, *fp);
-            return;
+            return - 1;
         }
 #undef SUB
     }
@@ -818,6 +819,8 @@ void cpm_dump_append_to_file(struct cpm_diren_s *dir, FILE **fp, u8 *buf, size_t
         fprintf(stderr, "Error writing to file.\n");
         exit(1);
     }
+
+    return 0;
 }
 
 static
@@ -830,7 +833,7 @@ void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_fi
     record_counter = 0;
 
     for (k = 0; k < sizeof(dir->AL); k++) {
-        int h, s;
+        int r, s;
         int is_last_AL;
         int sector;
         int track;
@@ -860,9 +863,12 @@ void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_fi
 
             read_logical_sector(fp, cur_track, cur_sector, block_buffer);
 
-            for (h = 0; h < g_num_record_per_sector; h++) {
+            for (r = 0; r < g_num_record_per_sector; r++) {
                 if (to_file) {
-                    if (h == 0) {
+                    int skip_early;
+
+                    skip_early = 0;
+                    if (r == 0) {
                         int skip_amsdos;
                         int has_amsdos_header;
 
@@ -873,12 +879,19 @@ void dump_extent(FILE *fp, struct cpm_diren_s *dir, int to_file, FILE **write_fi
                             continue;
                         }
                     }
-                    cpm_dump_append_to_file(dir, write_file, block_buffer + h * g_record_size, g_record_size, text);
+                    skip_early = cpm_dump_append_to_file(dir, write_file, block_buffer + r * g_record_size, g_record_size, text);
+
+                    if (skip_early == -1) {
+                        return;
+                    }
                 } else {
-                    hex_dump(block_buffer + h * g_record_size, (dir->AL[k] * g_block_size) + s * SIZ_SECTOR + h * g_record_size, g_record_size);
+                    if (r == 0) {
+                        printf("# track: %2d, sector: %2d\n", cur_track, cur_sector);
+                    }
+                    hex_dump(block_buffer + r * g_record_size, (dir->AL[k] * g_block_size) + s * SIZ_SECTOR + r * g_record_size, g_record_size);
                 }
 
-                if (is_last_AL && (record_counter + 1) >= dir->RC) { /* ?? */
+                if (is_last_AL && (record_counter + 1) >= dir->RC) {
                     return;
                 }
 
