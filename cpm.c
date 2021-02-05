@@ -658,7 +658,9 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
     int first_sector_id;
     int tracks_sectors[512][2];
     int tracks_sectors_i;
+    int file_found;
 
+    file_found = 0;
     first_sector_id = check_disk_type(fp, CPM_SYSTEM_DISK)
       ? CPM_SYSTEM_DISK
       : CPM_DATA_DISK;
@@ -689,6 +691,8 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
             if (stricmp(full_file_name, file_name) != 0) {
                 continue;
             }
+
+            file_found = 1;
 
             if (!tracks_only) {
                 printf("Directory Entry: %.2d\n", dir.EX);
@@ -747,6 +751,11 @@ void cpm_info(FILE *fp, const char *file_name, int tracks_only)
                 printf("\n");
             }
         }
+    }
+
+    if (!file_found) {
+        printf("File %s not found.\n", file_name);
+        exit(0);
     }
 
     if (!tracks_only) {
@@ -980,7 +989,7 @@ void cpm_new(FILE *fp)
 }
 
 
-void init_disk_params(FILE *fp)
+void cpm_init(FILE *fp)
 {
     int is_system_disk;
 

@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     fclose(test_file);
 
     image = fopen(TEST_DISK, "rb+");
-    init_disk_params(image);
+    cpm_init(image);
 
     cpm_insert(image, (char *) TEST_FILE, 0, 0, 0);
     fclose(image);

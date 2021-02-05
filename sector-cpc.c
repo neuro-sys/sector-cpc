@@ -125,11 +125,11 @@ void print_usage_and_exit()
 {
     printf("Arguments:\n");
     printf("  --file filename.dsk <command>\n");
-    printf("  --new  filename.dsk\n");
     printf("  --no-amsdos                         Do not add AMSDOS header.\n");
     printf("  --text                              Treat file as text, and SUB byte as EOF marker. [0]\n");
     printf("Options:\n");
     printf("  <command>:\n");
+    printf("    new                               Create a new empty disk image.\n");
     printf("    dir                               Lists contents of disk image.\n");
     printf("    dump <file_name>                  Hexdump contents of file to standard output. [1]\n");
     printf("    extract <file_name>               Extract contents of file into host disk.\n");
@@ -151,7 +151,7 @@ void print_usage_and_exit()
     exit(0);
 }
 
-struct getopts_s {
+struct args_s {
     struct {
         char *file_name;
         int valid;
@@ -169,6 +169,10 @@ struct getopts_s {
         struct {
             int valid;
         } dir;
+
+        struct {
+            int valid;
+        } new;
 
         struct {
             char *file_name;
@@ -192,11 +196,6 @@ struct getopts_s {
     } file;
 
     struct {
-        char *file_name;
-        int valid;
-    } new;
-
-    struct {
         int valid;
     } no_amsdos;
 
@@ -209,13 +208,13 @@ struct getopts_s {
     } version;
 };
 
-void getopts(struct getopts_s *opts, int argc, char *argv[])
+void parse_args(struct args_s *opts, int argc, char *argv[])
 {
     int i;
 
     assert(opts);
 
-    memset(opts, 0, sizeof(struct getopts_s));
+    memset(opts, 0, sizeof(struct args_s));
 
     for (i = 0; i < argc; i++) {
         if (strcmp(argv[i], "--file") == 0) {
@@ -227,15 +226,6 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
             opts->file.file_name = argv[i + 1];
         }
 
-        if (strcmp(argv[i], "--new") == 0) {
-            if (i + 1 == argc) {
-                print_usage_and_exit();
-            }
-
-            opts->new.valid = 1;
-            opts->new.file_name = argv[i + 1];
-        }
-
         if (strcmp(argv[i], "--no-amsdos") == 0) {
             opts->no_amsdos.valid = 1;
         }
@@ -245,6 +235,10 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
         }
 
         if (opts->file.valid) {
+            if (strcmp(argv[i], "new") == 0) {
+                opts->file.new.valid = 1;
+            }
+
             if (strcmp(argv[i], "dir") == 0) {
                 opts->file.dir.valid = 1;
             }
@@ -308,12 +302,13 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
         }
     }
 
-    if (!opts->file.valid && !opts->new.valid) {
+    if (!opts->file.valid) {
         print_usage_and_exit();
     }
 
     if (opts->file.valid
         && !opts->file.dump.valid
+        && !opts->file.new.valid
         && !opts->file.dir.valid
         && !opts->file.info.valid
         && !opts->file.extract.valid
@@ -325,34 +320,29 @@ void getopts(struct getopts_s *opts, int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    struct getopts_s opts;
+    struct args_s opts;
 
-    getopts(&opts, argc, argv);
-
-    if (opts.new.valid) {
-        FILE *fp;
-
-        fp = fopen(opts.new.file_name, "wb+");
-        if (!fp) {
-            fprintf(stderr, "Failed to open file %s for writing.\n", opts.new.file_name);
-            exit(1);
-        }
-
-        cpm_new(fp);
-
-        fclose(fp);
-    }
+    parse_args(&opts, argc, argv);
 
     if (opts.file.valid) {
         FILE *fp;
+        char *fopen_flags = "rb+";
 
-        fp = fopen(opts.file.file_name, "rb+");
+        if (opts.file.new.valid) {
+            fopen_flags = "wb+";
+        }
+
+        fp = fopen(opts.file.file_name, fopen_flags);
         if (!fp) {
-            fprintf(stderr, "Failed to open file %s for reading.\n", opts.file.file_name);
+            fprintf(stderr, "Failed to open file %s.\n", opts.file.file_name);
             exit(1);
         }
 
-        init_disk_params(fp);
+        if (opts.file.new.valid) {
+            cpm_new(fp);
+        }
+
+        cpm_init(fp);
 
         if (opts.file.dir.valid) {
             cpm_dir(fp);

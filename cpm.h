@@ -49,7 +49,7 @@ void cpm_dir(FILE *fp);
 void cpm_info(FILE *fp, const char *file_name, int tracks_only);
 void cpm_dump(FILE *fp, const char *file_name, int to_file, int text);
 void cpm_new(FILE *fp);
-void init_disk_params(FILE *fp);
+void cpm_init(FILE *fp);
 void denormalize_filename(const char *full_file_name, struct cpm_diren_s *dest);
 
 #endif

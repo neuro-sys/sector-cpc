@@ -9,11 +9,11 @@ sector-cpc is a command line utility to create and edit DSK images for Amstrad C
 ```
 Arguments:
   --file filename.dsk <command>
-  --new  filename.dsk
   --no-amsdos                         Do not add AMSDOS header.
   --text                              Treat file as text, and SUB byte as EOF marker. [0]
 Options:
   <command>:
+    new                               Create a new empty disk image.
     dir                               Lists contents of disk image.
     dump <file_name>                  Hexdump contents of file to standard output. [1]
     extract <file_name>               Extract contents of file into host disk.
@@ -48,7 +48,7 @@ make
 Create a new disk image:
 
 ```
-./sector-cpc --new test.dsk
+./sector-cpc --file test.dsk new
 ```
 
 Insert a file into disk image:
