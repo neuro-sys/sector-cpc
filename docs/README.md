@@ -2,7 +2,7 @@
 
 ![](face.png)
 
-sector-cpc is a command line utility to create and edit DSK images for Amstrad CPC 464/644/6128 and Plus family of computers.
+sector-cpc is a command line utility to create and edit DSK images for Amstrad CPC 464/664/6128 and Plus family of computers.
 
 ## Usage
 
