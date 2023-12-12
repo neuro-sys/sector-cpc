@@ -119,7 +119,7 @@
 #include "cpm.h"
 #include "cpcemu.h"
 
-#define VERSION "0.2.1"
+#define VERSION "0.3"
 
 void print_usage_and_exit()
 {
@@ -133,6 +133,7 @@ void print_usage_and_exit()
     printf("    dir                               Lists contents of disk image.\n");
     printf("    dump <file_name>                  Hexdump contents of file to standard output. [1]\n");
     printf("    extract <file_name>               Extract contents of file into host disk.\n");
+    printf("    extall                            Extract all files to host disk.\n");
     printf("    insert <file_name> [<entry_addr>, <exec_addr>]\n"
            "                                      Insert file on host system into disk.\n");
     printf("    del <file_name>                   Delete file from disk.\n");
@@ -147,7 +148,7 @@ void print_usage_and_exit()
            "    Also give space between the two."
            "    E.g. 0x8000, or &8000 and 8000h are valid.\n");
     printf("\n");
-    printf("sector-cpc " VERSION " 2019\n");
+    printf("sector-cpc " VERSION " 2023\n");
     exit(0);
 }
 
@@ -160,6 +161,10 @@ struct args_s {
             char *file_name;
             int valid;
         } extract;
+
+        struct {
+            int valid;
+        } extall;
 
         struct {
             char *file_name;
@@ -274,6 +279,10 @@ void parse_args(struct args_s *opts, int argc, char *argv[])
                 opts->file.extract.file_name = argv[i + 1];
             }
 
+            if (strcmp(argv[i], "extall") == 0) {
+                opts->file.extall.valid = 1;
+            }
+
             if (strcmp(argv[i], "insert") == 0) {
                 if (i + 1 == argc) {
                     print_usage_and_exit();
@@ -312,6 +321,7 @@ void parse_args(struct args_s *opts, int argc, char *argv[])
         && !opts->file.dir.valid
         && !opts->file.info.valid
         && !opts->file.extract.valid
+        && !opts->file.extall.valid
         && !opts->file.insert.valid
         && !opts->file.del.valid) {
         print_usage_and_exit();
@@ -354,6 +364,16 @@ int main(int argc, char *argv[])
 
         if (opts.file.dump.valid) {
             cpm_dump(fp, opts.file.dump.file_name, 0, 0);
+        }
+
+        if (opts.file.extall.valid) {
+            cpm_dirn_s *go = cpm_dir_short(fp);
+            cpm_dirn_s *cur = go;
+            while(cur) {
+                cpm_dump(fp, cur->file_name, 1, opts.text.valid);
+                cur = cur->next;
+            }
+            del_cpm_dirn_s(go);
         }
 
         if (opts.file.extract.valid) {

@@ -17,6 +17,7 @@ Options:
     dir                               Lists contents of disk image.
     dump <file_name>                  Hexdump contents of file to standard output. [1]
     extract <file_name>               Extract contents of file into host disk.
+    extall                            Extract all files to host disk.
     insert <file_name> [<entry_addr>, <exec_addr>]
                                       Insert file on host system into disk.
     del <file_name>                   Delete file from disk.
@@ -41,6 +42,19 @@ mkdir build
 cd build
 cmake ..
 make
+```
+
+An alternative way using MSVS and the Windows (at least) CMake distro:
+```
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+Or with TinyCC:
+```
+tcc -o sector-cpc.exe sector-cpc.c amsdos.c cpcemu.c cpm.c
 ```
 
 ## Examples
