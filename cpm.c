@@ -80,7 +80,7 @@ void normalize_filename(char *full_file_name, struct cpm_diren_s *dir)
         int c = file_name[k];
 
         if (isprint(c) && !isspace(c)) {
-            full_file_name[j++] = c & 0x7f;
+            full_file_name[j++] = strchr("<>:\"/\\|?*",c) ? '_' : c & 0x7f;
         }
     }
 
@@ -557,8 +557,7 @@ void cpm_dir(FILE *fp)
             int file_size;
 
             sum_RC       = 0;
-            extent_index = 1;                 /* Start searching from
-                                                 the next extent */
+            extent_index = 1; /* Start searching from the next extent */
 
             memset(&extent_diren, 0, sizeof(dir));
             memset(&dir, 0, sizeof(dir));
@@ -588,6 +587,53 @@ void cpm_dir(FILE *fp)
                    read_only ? "read-only" : "");
         }
     }
+}
+
+void del_cpm_dirn_s(cpm_dirn_s *a) {
+    if(a->next) del_cpm_dirn_s(a->next);
+    free(a);
+}
+
+cpm_dirn_s* cpm_dir_short(FILE *fp) {
+    int i;
+    cpm_dirn_s* go = malloc(sizeof(cpm_dirn_s)); // Leaving the freeing to the caller!
+    cpm_dirn_s *last,*cur;
+    cur = go; cur->next = NULL; last = go;
+
+    for (i = 0; i < g_num_sector_in_diren_table; i++) {
+        u8 buffer[SIZ_SECTOR];
+        int j;
+
+        read_logical_sector(fp, g_base_track, i, buffer);
+
+        for (j = 0; j < g_num_file_per_sector; j++) {
+            struct cpm_diren_s dir, extent_diren;
+            char full_file_name[13];
+            int extent_index = 1; /* Start searching from the next extent */
+
+            memset(&extent_diren, 0, sizeof(dir));
+            memset(&dir, 0, sizeof(dir));
+            memcpy(&dir, buffer + j * sizeof(dir), sizeof(dir));
+
+            if (   dir.user_number == CPM_NO_FILE
+                || dir.AL[0]       == 0
+                || dir.EX          != 0) {
+                continue;
+            }
+
+            normalize_filename(full_file_name, &dir);
+
+            memcpy(&cur->file_name, &full_file_name, sizeof(full_file_name));
+            //printf("Indexed file %s.\n",cur->file_name);
+
+            last = cur;
+            cur->next = malloc(sizeof(cpm_dirn_s));
+            cur = (cpm_dirn_s*)cur->next;
+            cur->next = NULL;
+        }
+    }
+    last->next = NULL; free(cur);
+    return go;
 }
 
 static void print_tracks_sectors_info(int tracks_sectors[512][2], int tracks_sectors_c)

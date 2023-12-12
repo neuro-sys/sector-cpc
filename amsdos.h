@@ -5,8 +5,11 @@
 
 #include <stdio.h>
 
-#pragma pack(push)
-#pragma pack(1)
+#ifndef __TINYC__
+ #pragma pack(push)
+ #pragma pack(1)
+#endif
+
 struct amsdos_header_s {
     u8 user_number;
     u8 filename[8];
@@ -24,7 +27,9 @@ struct amsdos_header_s {
     u16 check_sum;
     u8 _unused4[60];
 };
-#pragma pack(pop)
+#ifndef __TINYC__
+ #pragma pack(pop)
+#endif
 
 void amsdos_new(FILE *fp, struct amsdos_header_s *dest, const char *file_name, u16 entry_addr, u16 exec_addr);
 int amsdos_header_exists(struct amsdos_header_s *header);

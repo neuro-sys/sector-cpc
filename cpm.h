@@ -17,6 +17,11 @@ struct cpm_diren_s {
     u8 AL[16];
 };
 
+typedef struct {
+    u8 file_name[13];
+    void* next;
+} cpm_dirn_s;
+
 #define CPM_NO_FILE             0xE5
 #define CPM_SYSTEM_DISK         0x41
 #define CPM_DATA_DISK           0xC1
@@ -46,6 +51,14 @@ void cpm_write_diren(FILE *fp, struct cpm_diren_s *dir, int diren_index);
 void cpm_insert(FILE *fp, const char *file_name, u16 entry_addr, u16 exec_addr, int amsdos);
 int cpm_del(FILE *fp, const char *file_name);
 void cpm_dir(FILE *fp);
+
+// A helper function to clean up after extall.
+// Not that the program won't, automatically, but.
+void del_cpm_dirn_s(cpm_dirn_s *a);
+
+//returns a dynamic list of files instead of printing it:
+cpm_dirn_s* cpm_dir_short(FILE *fp);
+
 void cpm_info(FILE *fp, const char *file_name, int tracks_only);
 void cpm_dump(FILE *fp, const char *file_name, int to_file, int text);
 void cpm_new(FILE *fp);

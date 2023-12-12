@@ -19,8 +19,10 @@ extern const char *CPCEMU_CREATOR;
 extern const char *CPCEMU_TRACK_HEADER;
 
 /* Tightly packed disc data structures */
-#pragma pack(push)
-#pragma pack(1)
+#ifndef __TINYC__
+ #pragma pack(push)
+ #pragma pack(1)
+#endif
 struct cpcemu_disc_info_s {
     char header[34];                    /* CPCEMU_HEADER_STD or
                                            CPCEMU_HEADER_EX */
@@ -79,7 +81,9 @@ struct cpcemu_track_info_s {
 
 };
 
-#pragma pack(pop)
+#ifndef __TINYC__
+ #pragma pack(pop)
+#endif
 
 extern u8 g_sector_skew_table[NUM_SECTOR];
 
